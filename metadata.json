@@ -1,0 +1,6 @@
+{
+  "name": "Portal Escolar - Pré-Conselho de Classe",
+  "description": "Sistema escolar intuitivo para professores preencherem relatórios de turmas e alunos, com painel administrativo, questionários dinâmicos, notificações e exportação PDF/Excel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
