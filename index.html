@@ -4,18 +4,2248 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Portal Escolar - Pré-Conselho de Classe</title>
-    <meta name="description" content="Sistema escolar intuitivo para professores preencherem relatórios de turmas e alunos, com painel administrativo e formulários dinâmicos." />
-    <meta property="og:title" content="Portal Escolar - Pré-Conselho de Classe" />
-    <meta property="og:description" content="Sistema escolar intuitivo para professores preencherem relatórios de turmas e alunos, com painel administrativo e formulários dinâmicos." />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <meta
+      name="description"
+      content="Sistema escolar autônomo para pré-conselho de classe, atas consolidadas, gestão de turmas e alunos destaque estrela."
+    />
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: '#f0f7ff',
+                100: '#e0effe',
+                500: '#3b82f6',
+                600: '#2563eb',
+                700: '#1d4ed8',
+                800: '#1e40af',
+                900: '#1e3a8a',
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <!-- React 18 & ReactDOM UMD -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel Standalone para JSX no navegador -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- jsPDF para download de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      }
+      @media print {
+        .print\:hidden {
+          display: none !important;
+        }
+        .print\:block {
+          display: block !important;
+        }
+        body {
+          background-color: white !important;
+          color: black !important;
+        }
+      }
+    </style>
   </head>
-  <body class="bg-slate-50 text-slate-900 antialiased font-sans">
+  <body class="bg-slate-50 text-slate-900 antialiased selection:bg-blue-600 selection:text-white">
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+
+    <script type="text/babel">
+      const { useState, useEffect, useRef, useMemo } = React;
+
+      // ==========================================
+      // ÍCONES SVG INLINE AUTÔNOMOS (SEM DEPENDÊNCIAS)
+      // ==========================================
+      const IconGraduation = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+        </svg>
+      );
+
+      const IconStar = ({ className = 'w-5 h-5', filled = false }) => (
+        <svg className={className} fill={filled ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+        </svg>
+      );
+
+      const IconUsers = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      );
+
+      const IconShield = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      );
+
+      const IconBookOpen = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      );
+
+      const IconSearch = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      );
+
+      const IconPlus = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+      );
+
+      const IconTrash = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      );
+
+      const IconCheck = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      );
+
+      const IconDownload = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+      );
+
+      const IconPrinter = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+        </svg>
+      );
+
+      const IconSparkles = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.286L13 21l-2.286-6.857L5 12l5.714-2.286L13 3z" />
+        </svg>
+      );
+
+      const IconArrowRight = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
+      );
+
+      const IconArrowLeft = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      );
+
+      const IconBell = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+      );
+
+      const IconLogOut = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg>
+      );
+
+      const IconKey = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+        </svg>
+      );
+
+      const IconX = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      );
+
+      const IconEye = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      );
+
+      const IconEyeOff = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+        </svg>
+      );
+
+      const IconLightbulb = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+      );
+
+      const IconMic = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+        </svg>
+      );
+
+      const IconChevronDown = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      );
+
+      const IconClock = ({ className = 'w-5 h-5' }) => (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      );
+
+      // ==========================================
+      // DADOS INICIAIS DA ESCOLA
+      // ==========================================
+      const INITIAL_SCHOOL_CONFIG = {
+        name: 'ESCOLA ESTADUAL DO CAMPO FREI GRACIANO DROESSLER',
+        subtitle: 'ENSINO FUNDAMENTAL EM TEMPO INTEGRAL',
+        documentTitle: 'FICHA - PRÉ-CONSELHO DE CLASSE',
+        period: '1º Bimestre - Ano Letivo',
+        pedagogueName: 'Profª. Cláudia Mendonça (Pedagoga)',
+        principalName: 'Profª. Maria Aparecida Ribeiro (Diretora)',
+      };
+
+      const INITIAL_USERS = [
+        {
+          id: 'teacher-1',
+          username: 'carlos',
+          name: 'Prof. Carlos Silva',
+          email: 'carlos.silva@escola.gov.br',
+          role: 'teacher',
+          subject: 'Matemática e Raciocínio Lógico',
+          assignedClassIds: ['turma-6a', 'turma-8a'],
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+        },
+        {
+          id: 'teacher-2',
+          username: 'ana',
+          name: 'Profª. Ana Paula Souza',
+          email: 'ana.souza@escola.gov.br',
+          role: 'teacher',
+          subject: 'Língua Portuguesa e Redação',
+          assignedClassIds: ['turma-7b', 'turma-9a'],
+          avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
+        },
+        {
+          id: 'teacher-3',
+          username: 'mariana',
+          name: 'Profª. Mariana Lima',
+          email: 'mariana.lima@escola.gov.br',
+          role: 'teacher',
+          subject: 'Ciências da Natureza',
+          assignedClassIds: ['turma-6a', 'turma-7b'],
+          avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80',
+        },
+        {
+          id: 'teacher-4',
+          username: 'roberto',
+          name: 'Prof. Roberto Mendes',
+          email: 'roberto.mendes@escola.gov.br',
+          role: 'teacher',
+          subject: 'História e Geografia',
+          assignedClassIds: ['turma-8a', 'turma-9a'],
+          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
+        },
+        {
+          id: 'admin-1',
+          username: 'admin',
+          name: 'Coordenação Pedagógica / Direção',
+          email: 'pedagogico@freigraciano.seed.pr.gov.br',
+          role: 'admin',
+          assignedClassIds: ['turma-6a', 'turma-7b', 'turma-8a', 'turma-9a'],
+          avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=120&auto=format&fit=crop&q=80',
+        },
+      ];
+
+      const INITIAL_CLASSES = [
+        { id: 'turma-6a', name: '6º Ano A', grade: '6º Ano', shift: 'Manhã', studentCount: 8 },
+        { id: 'turma-7b', name: '7º Ano B', grade: '7º Ano', shift: 'Tarde', studentCount: 8 },
+        { id: 'turma-8a', name: '8º Ano A', grade: '8º Ano', shift: 'Manhã', studentCount: 8 },
+        { id: 'turma-9a', name: '9º Ano A', grade: '9º Ano', shift: 'Manhã', studentCount: 8 },
+      ];
+
+      const INITIAL_STUDENTS = [
+        // 6º Ano A
+        { id: 'st-6a-1', classId: 'turma-6a', name: 'Alana Beatriz Costa', rollNumber: 1, isStar: true, starCategory: 'academic', starReason: 'Excelente raciocínio lógico e participação nas aulas.' },
+        { id: 'st-6a-2', classId: 'turma-6a', name: 'Bernardo Ramos Dias', rollNumber: 2 },
+        { id: 'st-6a-3', classId: 'turma-6a', name: 'Camila Ferreira Rocha', rollNumber: 3, isStar: true, starCategory: 'attitude', starReason: 'Liderança colaborativa e apoio exemplar aos colegas.' },
+        { id: 'st-6a-4', classId: 'turma-6a', name: 'Davi Lucca Moreira', rollNumber: 4 },
+        { id: 'st-6a-5', classId: 'turma-6a', name: 'Enzo Gabriel Ribeiro', rollNumber: 5, isStar: true, starCategory: 'improvement', starReason: 'Superação notável nas notas e na entrega de tarefas.' },
+        { id: 'st-6a-6', classId: 'turma-6a', name: 'Fernanda Lima Nogueira', rollNumber: 6 },
+        { id: 'st-6a-7', classId: 'turma-6a', name: 'Gustavo Henrique Pires', rollNumber: 7 },
+        { id: 'st-6a-8', classId: 'turma-6a', name: 'Helena Duarte Souza', rollNumber: 8 },
+
+        // 7º Ano B
+        { id: 'st-7b-1', classId: 'turma-7b', name: 'Arthur Mendonça', rollNumber: 1, isStar: true, starCategory: 'academic', starReason: 'Redações com vocabulário rico e leitura expressiva.' },
+        { id: 'st-7b-2', classId: 'turma-7b', name: 'Beatriz Vasconcelos', rollNumber: 2 },
+        { id: 'st-7b-3', classId: 'turma-7b', name: 'Caio Alexandre Prado', rollNumber: 3 },
+        { id: 'st-7b-4', classId: 'turma-7b', name: 'Daniela Farias Silva', rollNumber: 4, isStar: true, starCategory: 'creativity', starReason: 'Criatividade em projetos de ciências e artes.' },
+        { id: 'st-7b-5', classId: 'turma-7b', name: 'Erick Vinícius Santos', rollNumber: 5 },
+        { id: 'st-7b-6', classId: 'turma-7b', name: 'Gabriela Toledo Ramos', rollNumber: 6 },
+        { id: 'st-7b-7', classId: 'turma-7b', name: 'Igor Castilho Neves', rollNumber: 7 },
+        { id: 'st-7b-8', classId: 'turma-7b', name: 'Júlia Martins Xavier', rollNumber: 8 },
+
+        // 8º Ano A
+        { id: 'st-8a-1', classId: 'turma-8a', name: 'Kauã Rodrigues Prado', rollNumber: 1 },
+        { id: 'st-8a-2', classId: 'turma-8a', name: 'Larissa Antunes Meireles', rollNumber: 2, isStar: true, starCategory: 'academic', starReason: 'Médias superiores a 9.0 e postura exemplar.' },
+        { id: 'st-8a-3', classId: 'turma-8a', name: 'Matheus Felipe Barbosa', rollNumber: 3 },
+        { id: 'st-8a-4', classId: 'turma-8a', name: 'Nicole Carvalho Lopes', rollNumber: 4 },
+        { id: 'st-8a-5', classId: 'turma-8a', name: 'Otávio Augusto Franco', rollNumber: 5, isStar: true, starCategory: 'attitude', starReason: 'Cooperação com os professores e assiduidade plena.' },
+        { id: 'st-8a-6', classId: 'turma-8a', name: 'Poliana Bueno Guimarães', rollNumber: 6 },
+        { id: 'st-8a-7', classId: 'turma-8a', name: 'Renan Silveira Campos', rollNumber: 7 },
+        { id: 'st-8a-8', classId: 'turma-8a', name: 'Sophia Albuquerque Reis', rollNumber: 8 },
+
+        // 9º Ano A
+        { id: 'st-9a-1', classId: 'turma-9a', name: 'Thiago Moura Siqueira', rollNumber: 1 },
+        { id: 'st-9a-2', classId: 'turma-9a', name: 'Valentina Corrêa Paz', rollNumber: 2, isStar: true, starCategory: 'academic', starReason: 'Destaque acadêmico constante e pensamento crítico.' },
+        { id: 'st-9a-3', classId: 'turma-9a', name: 'Yago Henrique Tavares', rollNumber: 3 },
+        { id: 'st-9a-4', classId: 'turma-9a', name: 'Yasmin Batista Camargo', rollNumber: 4 },
+        { id: 'st-9a-5', classId: 'turma-9a', name: 'Lucas Pinheiro Freitas', rollNumber: 5, isStar: true, starCategory: 'improvement', starReason: 'Grande avanço em matemática e comprometimento pessoal.' },
+        { id: 'st-9a-6', classId: 'turma-9a', name: 'Manuela Rezende Borges', rollNumber: 6 },
+        { id: 'st-9a-7', classId: 'turma-9a', name: 'Nicolas Peixoto Diniz', rollNumber: 7 },
+        { id: 'st-9a-8', classId: 'turma-9a', name: 'Rafaela Novaes Brito', rollNumber: 8 },
+      ];
+
+      const INITIAL_SECTIONS = [
+        { id: 'sec-1', title: '1. Aspectos Gerais e Dinâmica da Turma', order: 1 },
+        { id: 'sec-2', title: '2. Desempenho e Aprendizagem', order: 2 },
+        { id: 'sec-3', title: '3. Encaminhamentos e Intervenções', order: 3 },
+      ];
+
+      const INITIAL_QUESTIONS = [
+        {
+          id: 'q-1',
+          sectionId: 'sec-1',
+          prompt: '1. Como a turma se comportou em relação à participação ativa, atenção e interesse durante as aulas?',
+          type: 'textarea',
+          required: true,
+          order: 1,
+        },
+        {
+          id: 'q-2',
+          sectionId: 'sec-1',
+          prompt: '2. Houve pontualidade na entrega de atividades individuais e em grupo?',
+          type: 'textarea',
+          required: true,
+          order: 2,
+        },
+        {
+          id: 'q-3',
+          sectionId: 'sec-1',
+          prompt: '3. Como foi o relacionamento interpessoal entre os estudantes e com o(a) professor(a)?',
+          type: 'textarea',
+          required: false,
+          order: 3,
+        },
+        {
+          id: 'q-4',
+          sectionId: 'sec-1',
+          prompt: '4. Há estudantes com infrequência frequente ou faltas não justificadas?',
+          type: 'textarea',
+          required: true,
+          order: 4,
+        },
+        {
+          id: 'q-5',
+          sectionId: 'sec-2',
+          prompt: '5. Quais estudantes se destacaram positivamente (acadêmico, atitude ou superação)?',
+          type: 'textarea',
+          required: true,
+          order: 5,
+        },
+        {
+          id: 'q-6',
+          sectionId: 'sec-2',
+          prompt: '6. Quais estudantes apresentaram dificuldades mais acentuadas de aprendizagem?',
+          type: 'textarea',
+          required: true,
+          order: 6,
+        },
+        {
+          id: 'q-7',
+          sectionId: 'sec-2',
+          prompt: '7. Quais foram os principais conteúdos ou habilidades com maior defasagem no bimestre?',
+          type: 'textarea',
+          required: false,
+          order: 7,
+        },
+        {
+          id: 'q-8',
+          sectionId: 'sec-3',
+          prompt: '8. Quais intervenções pedagógicas ou metodologias diferenciadas foram aplicadas?',
+          type: 'textarea',
+          required: true,
+          order: 8,
+        },
+        {
+          id: 'q-9',
+          sectionId: 'sec-3',
+          prompt: '9. Quais estudantes necessitam de convocação de responsáveis ou encaminhamento pedagógico?',
+          type: 'textarea',
+          required: false,
+          order: 9,
+        },
+        {
+          id: 'q-10',
+          sectionId: 'sec-3',
+          prompt: '10. Observações e propostas para o próximo bimestre:',
+          type: 'textarea',
+          required: false,
+          order: 10,
+        },
+      ];
+
+      const INITIAL_REPORTS = [
+        {
+          id: 'rep-carlos-6a',
+          classId: 'turma-6a',
+          className: '6º Ano A',
+          teacherId: 'teacher-1',
+          teacherName: 'Prof. Carlos Silva',
+          subject: 'Matemática e Raciocínio Lógico',
+          period: '1º Bimestre - Ano Letivo',
+          date: '2026-03-24',
+          status: 'submitted',
+          answers: {
+            'q-1': 'A turma demonstra grande interesse pelos conteúdos práticos de matemática, com bom engajamento nas atividades no quadro.',
+            'q-2': 'A grande maioria cumpriu os prazos de entrega das tarefas do caderno.',
+            'q-3': 'Clima harmonioso, bom trabalho em duplas cooperativas.',
+            'q-4': 'Gustavo Henrique Pires faltou em dias de prova e precisa de reposição de conteúdos.',
+            'q-5': 'Alana Beatriz Costa (#1) e Enzo Gabriel Ribeiro (#5) tiveram excelente desempenho em raciocínio lógico e resolução de problemas.',
+            'q-6': 'Bernardo Ramos Dias (#2) ainda apresenta lentidão na divisão de números naturais.',
+            'q-7': 'Operações fundamentais com frações e interpretação de gráficos estatísticos.',
+            'q-8': 'Uso de jogos de tabuleiro matemáticos e monitoria voluntária em duplas.',
+            'q-9': 'Recomendo atendimento com a pedagoga para Bernardo Ramos Dias.',
+            'q-10': 'Introduzir atividades lúdicas de geometria no 2º bimestre.',
+          },
+        },
+      ];
+
+      const PHRASE_SUGGESTIONS = [
+        { cat: 'Destaque Positivo ⭐', text: 'Demonstrou alto rendimento, excelente raciocínio analítico e pontualidade exemplar na entrega dos trabalhos.' },
+        { cat: 'Destaque Positivo ⭐', text: 'Excelente postura ética, empatia e protagonismo em sala de aula, auxiliando os colegas nos trabalhos em grupo.' },
+        { cat: 'Superação ⭐', text: 'Apresentou notável evolução e superação das dificuldades iniciais com muita persistência e esforço.' },
+        { cat: 'Dificuldade de Aprendizagem', text: 'Apresenta defasagem na interpretação textual e autonomia na realização das atividades propostas.' },
+        { cat: 'Infrequência', text: 'A infrequência irregular tem prejudicado diretamente o acompanhamento sequencial das disciplinas.' },
+        { cat: 'Intervenção', text: 'Recomenda-se acompanhamento no programa de reforço pedagógico no contraturno escolar e reforço familiar.' },
+      ];
+
+      // ==========================================
+      // PERSISTÊNCIA LOCAL (LOCALSTORAGE AUTÔNOMO)
+      // ==========================================
+      const STORAGE_KEY = 'PRE_CONSELHO_ESCOLAR_DATA_V2';
+
+      function getSavedData() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) return JSON.parse(raw);
+        } catch (e) {
+          console.error('Erro ao ler localStorage', e);
+        }
+        return {
+          users: INITIAL_USERS,
+          classes: INITIAL_CLASSES,
+          students: INITIAL_STUDENTS,
+          sections: INITIAL_SECTIONS,
+          questions: INITIAL_QUESTIONS,
+          reports: INITIAL_REPORTS,
+          schoolConfig: INITIAL_SCHOOL_CONFIG,
+          notifications: [
+            { id: 'notif-1', title: 'Pré-Conselho Aberto', message: 'Preenchimento do 1º Bimestre liberado para todos os professores.', isRead: false, date: '2026-03-24' }
+          ],
+        };
+      }
+
+      function saveData(data) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {
+          console.error('Erro ao salvar localStorage', e);
+        }
+      }
+
+      // ==========================================
+      // COMPONENTE PRINCIPAL (APP)
+      // ==========================================
+      function App() {
+        const [appData, setAppData] = useState(getSavedData);
+        const [currentUser, setCurrentUser] = useState(null);
+
+        // Modais globais
+        const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+        const [activeReportModal, setActiveReportModal] = useState(null);
+        const [starModalStudent, setStarModalStudent] = useState(null);
+
+        // Salvar alterações no localStorage
+        useEffect(() => {
+          saveData(appData);
+        }, [appData]);
+
+        // Handlers de dados
+        const handleLogin = (user) => setCurrentUser(user);
+        const handleLogout = () => setCurrentUser(null);
+
+        const handleToggleStar = (studentId, details) => {
+          setAppData((prev) => {
+            const nextStudents = prev.students.map((st) => {
+              if (st.id === studentId) {
+                const nextIsStar = details?.isStar !== undefined ? details.isStar : !st.isStar;
+                return {
+                  ...st,
+                  isStar: nextIsStar,
+                  starCategory: nextIsStar ? (details?.starCategory || st.starCategory || 'academic') : undefined,
+                  starReason: nextIsStar ? (details?.starReason || st.starReason || 'Destaque acadêmico e participativo reconhecido no conselho.') : undefined,
+                  starAddedBy: nextIsStar ? (details?.starAddedBy || currentUser?.name || 'Conselho Docente') : undefined,
+                };
+              }
+              return st;
+            });
+            return { ...prev, students: nextStudents };
+          });
+        };
+
+        const handleSaveReport = (reportData) => {
+          setAppData((prev) => {
+            const existingIndex = prev.reports.findIndex((r) => r.classId === reportData.classId && r.teacherId === reportData.teacherId);
+            let nextReports;
+            if (existingIndex >= 0) {
+              nextReports = [...prev.reports];
+              nextReports[existingIndex] = { ...nextReports[existingIndex], ...reportData, updatedAt: new Date().toISOString() };
+            } else {
+              const newReport = {
+                ...reportData,
+                id: 'rep-' + Date.now(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              };
+              nextReports = [newReport, ...prev.reports];
+            }
+            return { ...prev, reports: nextReports };
+          });
+        };
+
+        const handleAddStudent = (studentData) => {
+          setAppData((prev) => {
+            const newStudent = { ...studentData, id: 'st-' + Date.now() };
+            return { ...prev, students: [...prev.students, newStudent] };
+          });
+        };
+
+        const handleDeleteStudent = (studentId) => {
+          setAppData((prev) => ({
+            ...prev,
+            students: prev.students.filter((s) => s.id !== studentId),
+          }));
+        };
+
+        const handleAddNotification = (title, message, targetTeacherId) => {
+          setAppData((prev) => ({
+            ...prev,
+            notifications: [
+              {
+                id: 'notif-' + Date.now(),
+                title,
+                message,
+                targetTeacherId,
+                isRead: false,
+                date: new Date().toISOString().split('T')[0],
+              },
+              ...prev.notifications,
+            ],
+          }));
+        };
+
+        const handleDownloadStandaloneHtml = () => {
+          const htmlContent = '<!doctype html>\n' + document.documentElement.outerHTML;
+          const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'pre_conselho_escolar_autonomo.html';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        };
+
+        const handleResetData = () => {
+          if (confirm('Deseja resetar todos os dados do sistema para os valores originais de fábrica?')) {
+            const initial = {
+              users: INITIAL_USERS,
+              classes: INITIAL_CLASSES,
+              students: INITIAL_STUDENTS,
+              sections: INITIAL_SECTIONS,
+              questions: INITIAL_QUESTIONS,
+              reports: INITIAL_REPORTS,
+              schoolConfig: INITIAL_SCHOOL_CONFIG,
+              notifications: [
+                { id: 'notif-1', title: 'Pré-Conselho Aberto', message: 'Preenchimento do 1º Bimestre liberado para todos os professores.', isRead: false, date: '2026-03-24' }
+              ],
+            };
+            setAppData(initial);
+            saveData(initial);
+          }
+        };
+
+        if (!currentUser) {
+          return (
+            <LoginView
+              users={appData.users}
+              schoolConfig={appData.schoolConfig}
+              onLogin={handleLogin}
+              onDownloadHtml={handleDownloadStandaloneHtml}
+            />
+          );
+        }
+
+        return (
+          <div className="min-h-screen bg-slate-50 flex flex-col">
+            {/* Header Universal */}
+            <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs print:hidden">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between h-16">
+                  {/* Identidade da Escola */}
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <IconGraduation className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                        <span className="font-bold text-slate-900">Pré-Conselho Escolar</span>
+                        <span>·</span>
+                        <span>{appData.schoolConfig.period}</span>
+                      </div>
+                      <h1 className="text-xs sm:text-sm font-bold text-slate-900 truncate">
+                        {appData.schoolConfig.name}
+                      </h1>
+                    </div>
+                  </div>
+
+                  {/* Ações e Usuário */}
+                  <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+                    {/* Botão Baixar Arquivo HTML */}
+                    <button
+                      type="button"
+                      onClick={handleDownloadStandaloneHtml}
+                      className="hidden md:inline-flex items-center gap-1.5 py-1.5 px-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 hover:bg-blue-100 text-xs font-bold transition-colors cursor-pointer"
+                      title="Baixar este arquivo index.html completo para abrir em qualquer computador sem internet"
+                    >
+                      <IconDownload className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Salvar HTML Local</span>
+                    </button>
+
+                    {/* Notificações */}
+                    <button
+                      type="button"
+                      onClick={() => setShowNotificationsModal(true)}
+                      className="relative p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+                      title="Lembretes e avisos"
+                    >
+                      <IconBell className="w-5 h-5" />
+                      {appData.notifications.filter((n) => !n.isRead).length > 0 && (
+                        <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-blue-600 rounded-full" />
+                      )}
+                    </button>
+
+                    {/* Perfil Atual */}
+                    <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+                      <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs overflow-hidden shrink-0">
+                        {currentUser.avatar ? (
+                          <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full object-cover" />
+                        ) : (
+                          currentUser.name.charAt(0)
+                        )}
+                      </div>
+                      <div className="hidden sm:block text-left text-xs">
+                        <div className="font-bold text-slate-900 truncate max-w-36">{currentUser.name}</div>
+                        <div className="text-[11px] text-slate-500 truncate">
+                          {currentUser.role === 'admin' ? 'Coordenação' : currentUser.subject}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer ml-1"
+                        title="Sair do sistema"
+                      >
+                        <IconLogOut className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            {/* Conteúdo Principal */}
+            <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              {currentUser.role === 'admin' ? (
+                <AdminDashboard
+                  currentUser={currentUser}
+                  data={appData}
+                  onSaveReport={handleSaveReport}
+                  onToggleStar={handleToggleStar}
+                  onAddStudent={handleAddStudent}
+                  onDeleteStudent={handleDeleteStudent}
+                  onAddNotification={handleAddNotification}
+                  onViewReport={(rep) => setActiveReportModal(rep)}
+                  onOpenStarModal={(st) => setStarModalStudent(st)}
+                  onResetData={handleResetData}
+                  onDownloadHtml={handleDownloadStandaloneHtml}
+                />
+              ) : (
+                <TeacherDashboard
+                  currentUser={currentUser}
+                  data={appData}
+                  onSaveReport={handleSaveReport}
+                  onToggleStar={handleToggleStar}
+                  onViewReport={(rep) => setActiveReportModal(rep)}
+                  onOpenStarModal={(st) => setStarModalStudent(st)}
+                />
+              )}
+            </main>
+
+            {/* Modal de Aluno Estrela ⭐ */}
+            {starModalStudent && (
+              <StarStudentModal
+                student={starModalStudent}
+                teacherName={currentUser.name}
+                onClose={() => setStarModalStudent(null)}
+                onSaveStar={(stId, details) => {
+                  handleToggleStar(stId, details);
+                  setStarModalStudent(null);
+                }}
+              />
+            )}
+
+            {/* Modal de Visualização da Ficha */}
+            {activeReportModal && (
+              <ReportModal
+                report={activeReportModal}
+                questions={appData.questions}
+                sections={appData.sections}
+                schoolConfig={appData.schoolConfig}
+                students={appData.students.filter((s) => s.classId === activeReportModal.classId)}
+                onClose={() => setActiveReportModal(null)}
+              />
+            )}
+
+            {/* Modal de Notificações */}
+            {showNotificationsModal && (
+              <NotificationsModal
+                notifications={appData.notifications}
+                currentUser={currentUser}
+                onClose={() => setShowNotificationsModal(false)}
+                onMarkAsRead={(id) => {
+                  setAppData((prev) => ({
+                    ...prev,
+                    notifications: prev.notifications.map((n) => n.id === id ? { ...n, isRead: true } : n),
+                  }));
+                }}
+              />
+            )}
+
+            <footer className="py-4 border-t border-slate-200 bg-white text-center text-xs text-slate-500 print:hidden">
+              <p>
+                {appData.schoolConfig.name} • {appData.schoolConfig.period} — Arquivo Autônomo Standalone
+              </p>
+            </footer>
+          </div>
+        );
+      }
+
+      // ==========================================
+      // TELA DE LOGIN MODERNA E ELEGANTE (1 CLIQUE)
+      // ==========================================
+      function LoginView({ users, schoolConfig, onLogin, onDownloadHtml }) {
+        const [activeTab, setActiveTab] = useState('quick'); // 'quick' | 'credentials'
+        const [roleFilter, setRoleFilter] = useState('all'); // 'all' | 'teacher' | 'admin'
+        const [search, setSearch] = useState('');
+        const [identifier, setIdentifier] = useState('');
+        const [password, setPassword] = useState('');
+        const [showPassword, setShowPassword] = useState(false);
+        const [error, setError] = useState('');
+
+        const teachers = users.filter((u) => u.role === 'teacher');
+        const admins = users.filter((u) => u.role === 'admin');
+
+        const filteredUsers = users.filter((u) => {
+          const matchRole = roleFilter === 'all' ? true : roleFilter === 'teacher' ? u.role === 'teacher' : u.role === 'admin';
+          const s = search.toLowerCase().trim();
+          if (!s) return matchRole;
+          return matchRole && (u.name.toLowerCase().includes(s) || (u.subject || '').toLowerCase().includes(s) || u.username.toLowerCase().includes(s));
+        });
+
+        // Identificação automática enquanto digita
+        const cleanId = identifier.toLowerCase().trim();
+        const matched = cleanId ? users.find((u) => u.username.toLowerCase() === cleanId || u.name.toLowerCase().includes(cleanId) || u.email.toLowerCase().includes(cleanId)) : null;
+
+        const handleFormSubmit = (e) => {
+          e.preventDefault();
+          if (!cleanId) {
+            setError('Por favor, informe seu nome, usuário ou e-mail.');
+            return;
+          }
+          if (matched) {
+            onLogin(matched);
+          } else {
+            setError('Perfil não localizado. Use o modo Acesso Rápido de 1 Clique ao lado.');
+          }
+        };
+
+        return (
+          <div className="min-h-screen flex flex-col justify-center items-center px-4 py-8 bg-gradient-to-b from-slate-50 via-slate-100 to-blue-50/50">
+            <div className="w-full max-w-4xl">
+              {/* Cabeçalho da Escola */}
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-slate-900 text-white shadow-md mb-3 ring-4 ring-blue-100">
+                  <IconGraduation className="w-8 h-8 text-blue-400" />
+                </div>
+                <div className="flex items-center justify-center gap-2 text-xs text-blue-800 font-semibold mb-1">
+                  <span className="px-2.5 py-0.5 rounded-full bg-blue-100/80 border border-blue-200">
+                    Ambiente Pedagógico Digital
+                  </span>
+                  <span>·</span>
+                  <span className="text-slate-600 font-medium">{schoolConfig.period}</span>
+                </div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 leading-tight">
+                  {schoolConfig.name}
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-xl mx-auto">
+                  {schoolConfig.subtitle} — Sistema Autônomo com Alunos Estrela ⭐
+                </p>
+              </div>
+
+              {/* Card Central de Login */}
+              <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+                {/* Abas Superiores */}
+                <div className="bg-slate-50/90 border-b border-slate-200 p-2.5 flex flex-col sm:flex-row items-center justify-between gap-2">
+                  <div className="flex items-center bg-slate-200/70 p-1 rounded-2xl w-full sm:w-auto">
+                    <button
+                      type="button"
+                      onClick={() => { setActiveTab('quick'); setError(''); }}
+                      className={`flex-1 sm:flex-none py-2 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                        activeTab === 'quick' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <IconSparkles className="w-4 h-4 text-amber-500" />
+                      <span>Acesso Rápido (1 Clique)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setActiveTab('credentials'); setError(''); }}
+                      className={`flex-1 sm:flex-none py-2 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                        activeTab === 'credentials' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <IconKey className="w-4 h-4 text-blue-600" />
+                      <span>Digitar Credenciais</span>
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={onDownloadHtml}
+                    className="py-1.5 px-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    title="Baixar este arquivo HTML para seu computador"
+                  >
+                    <IconDownload className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Salvar Arquivo HTML</span>
+                  </button>
+                </div>
+
+                {/* Aba 1: Acesso Rápido por Perfil (1 Clique) */}
+                {activeTab === 'quick' && (
+                  <div className="p-5 sm:p-7 space-y-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                          Selecione seu Perfil para Entrar
+                        </h2>
+                        <p className="text-xs text-slate-500">
+                          Basta 1 clique para acessar as fichas e turmas do pré-conselho:
+                        </p>
+                      </div>
+
+                      {/* Sub-filtros por cargo */}
+                      <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold self-start sm:self-auto">
+                        <button
+                          type="button"
+                          onClick={() => setRoleFilter('all')}
+                          className={`px-3 py-1.5 rounded-lg cursor-pointer transition-colors ${roleFilter === 'all' ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-600'}`}
+                        >
+                          Todos ({users.length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRoleFilter('teacher')}
+                          className={`px-3 py-1.5 rounded-lg cursor-pointer transition-colors ${roleFilter === 'teacher' ? 'bg-white text-blue-700 shadow-2xs font-bold' : 'text-slate-600'}`}
+                        >
+                          Professores ({teachers.length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRoleFilter('admin')}
+                          className={`px-3 py-1.5 rounded-lg cursor-pointer transition-colors ${roleFilter === 'admin' ? 'bg-white text-emerald-800 shadow-2xs font-bold' : 'text-slate-600'}`}
+                        >
+                          Coordenação ({admins.length})
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Busca rápida */}
+                    <div className="relative">
+                      <IconSearch className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Buscar pelo nome ou matéria (ex: Carlos, Matemática, Ana, História)..."
+                        className="w-full text-xs sm:text-sm pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      />
+                    </div>
+
+                    {/* Grid de Perfis */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                      {filteredUsers.map((u) => {
+                        const isAdmin = u.role === 'admin';
+                        return (
+                          <div
+                            key={u.id}
+                            onClick={() => onLogin(u)}
+                            className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 group hover:shadow-md ${
+                              isAdmin
+                                ? 'bg-emerald-50/40 border-emerald-200 hover:border-emerald-400'
+                                : 'bg-white border-slate-200 hover:border-blue-400 hover:bg-blue-50/30'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 shadow-xs overflow-hidden ${
+                                isAdmin ? 'bg-emerald-600 text-white' : 'bg-blue-600 text-white'
+                              }`}>
+                                {u.avatar ? <img src={u.avatar} alt={u.name} className="w-full h-full object-cover" /> : u.name.charAt(0)}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5">
+                                  <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-700 truncate">{u.name}</h3>
+                                  {isAdmin && (
+                                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">Coordenação</span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-slate-500 mt-0.5 truncate font-medium">
+                                  {isAdmin ? 'Gestão Escolar, Atas & Alunos Estrela' : u.subject}
+                                </p>
+                                <p className="text-[11px] text-slate-400 mt-0.5 truncate">{u.email}</p>
+                              </div>
+                            </div>
+                            <span className={`py-2 px-3.5 rounded-xl font-bold text-xs flex items-center gap-1 shadow-2xs shrink-0 ${
+                              isAdmin ? 'bg-emerald-700 group-hover:bg-emerald-800 text-white' : 'bg-slate-900 group-hover:bg-blue-700 text-white'
+                            }`}>
+                              <span>Entrar</span>
+                              <IconArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Aba 2: Digitar Credenciais */}
+                {activeTab === 'credentials' && (
+                  <div className="p-6 sm:p-8 max-w-lg mx-auto">
+                    <div className="text-center mb-6">
+                      <h2 className="text-lg font-bold text-slate-900">Acesso por Usuário ou E-mail</h2>
+                      <p className="text-xs text-slate-500 mt-1">Digite seu nome, usuário escolar ou e-mail cadastrado:</p>
+                    </div>
+
+                    {error && (
+                      <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold rounded-xl">
+                        {error}
+                      </div>
+                    )}
+
+                    <form onSubmit={handleFormSubmit} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                          Usuário, Nome ou E-mail
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={identifier}
+                          onChange={(e) => { setIdentifier(e.target.value); setError(''); }}
+                          placeholder="Ex: Carlos, Ana, Roberto, admin..."
+                          className="w-full text-sm rounded-xl border border-slate-300 px-4 py-3 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        />
+                        {matched && (
+                          <div className="mt-2 p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 flex items-center justify-between">
+                            <span>✓ Perfil identificado: <strong>{matched.name}</strong> ({matched.role === 'admin' ? 'Coordenação' : matched.subject})</span>
+                            <button
+                              type="button"
+                              onClick={() => onLogin(matched)}
+                              className="font-bold underline cursor-pointer ml-2"
+                            >
+                              Entrar agora →
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            Senha
+                          </label>
+                          <span className="text-[11px] text-blue-600">Ambiente de demonstração (qualquer senha é aceita)</span>
+                        </div>
+                        <div className="relative">
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="••••••••"
+                            className="w-full text-sm rounded-xl border border-slate-300 pl-4 pr-10 py-3 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                          >
+                            {showPassword ? <IconEyeOff className="w-4 h-4" /> : <IconEye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full py-3.5 px-4 bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm rounded-xl shadow-md transition-all cursor-pointer"
+                      >
+                        Entrar no Pré-Conselho
+                      </button>
+                    </form>
+
+                    <div className="mt-6 pt-5 border-t border-slate-100 flex flex-wrap justify-center gap-1.5">
+                      {users.slice(0, 5).map((u) => (
+                        <button
+                          key={u.id}
+                          type="button"
+                          onClick={() => { setIdentifier(u.username); onLogin(u); }}
+                          className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-blue-100 text-slate-700 transition-colors cursor-pointer"
+                        >
+                          {u.name.split(' ')[0]} ({u.role === 'admin' ? 'Coord.' : u.subject.split(' ')[0]})
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // ==========================================
+      // PAINEL DO PROFESSOR (TEACHER DASHBOARD)
+      // ==========================================
+      function TeacherDashboard({ currentUser, data, onSaveReport, onToggleStar, onViewReport, onOpenStarModal }) {
+        const [currentStep, setCurrentStep] = useState('select_class'); // 'select_class' | 'fill_form'
+        const [selectedClassId, setSelectedClassId] = useState(null);
+        const [answers, setAnswers] = useState({});
+        const [showRosterInForm, setShowRosterInForm] = useState(true);
+        const [lastActiveQId, setLastActiveQId] = useState(null);
+        const [savedMessage, setSavedMessage] = useState(null);
+        const [isListening, setIsListening] = useState(false);
+        const [activeListeningQId, setActiveListeningQId] = useState(null);
+        const [phraseModalQ, setPhraseModalQ] = useState(null);
+
+        // Turmas atribuídas ao professor
+        const teacherClasses = data.classes.filter((c) => currentUser.assignedClassIds.includes(c.id));
+        const selectedClass = data.classes.find((c) => c.id === selectedClassId);
+
+        // Carregar relatório existente quando seleciona turma
+        const handleSelectClass = (classId) => {
+          setSelectedClassId(classId);
+          const rep = data.reports.find((r) => r.classId === classId && r.teacherId === currentUser.id);
+          setAnswers(rep?.answers || {});
+          setCurrentStep('fill_form');
+        };
+
+        const handleSave = (status = 'draft') => {
+          if (!selectedClass) return;
+          const reportPayload = {
+            classId: selectedClass.id,
+            className: selectedClass.name,
+            teacherId: currentUser.id,
+            teacherName: currentUser.name,
+            subject: currentUser.subject || 'Geral',
+            period: data.schoolConfig.period,
+            date: new Date().toISOString().split('T')[0],
+            status,
+            answers,
+          };
+          onSaveReport(reportPayload);
+          setSavedMessage(status === 'submitted' ? 'Ficha entregue oficialmente com sucesso!' : 'Rascunho salvo!');
+          setTimeout(() => setSavedMessage(null), 3000);
+          if (status === 'submitted') {
+            setCurrentStep('select_class');
+          }
+        };
+
+        const handleInsertStudent = (studentName, qId) => {
+          const target = qId || lastActiveQId || 'q-5';
+          setAnswers((prev) => {
+            const current = prev[target] || '';
+            const addition = current.trim() ? `, ${studentName}` : studentName;
+            return { ...prev, [target]: current + addition };
+          });
+        };
+
+        // Reconhecimento de Voz (Web Speech API)
+        const handleToggleVoice = (qId) => {
+          if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            alert('Reconhecimento de voz não é suportado pelo seu navegador atual.');
+            return;
+          }
+          if (isListening) {
+            setIsListening(false);
+            setActiveListeningQId(null);
+            return;
+          }
+          const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+          const recognition = new SpeechRecognition();
+          recognition.lang = 'pt-BR';
+          recognition.continuous = false;
+          recognition.interimResults = false;
+
+          recognition.onstart = () => {
+            setIsListening(true);
+            setActiveListeningQId(qId);
+          };
+          recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            setAnswers((prev) => {
+              const cur = prev[qId] || '';
+              return { ...prev, [qId]: cur ? `${cur} ${transcript}` : transcript };
+            });
+            setIsListening(false);
+            setActiveListeningQId(null);
+          };
+          recognition.onerror = () => {
+            setIsListening(false);
+            setActiveListeningQId(null);
+          };
+          recognition.onend = () => {
+            setIsListening(false);
+            setActiveListeningQId(null);
+          };
+          recognition.start();
+        };
+
+        return (
+          <div className="space-y-6">
+            {/* ETAPA 1: SELECIONAR TURMA */}
+            {currentStep === 'select_class' && (
+              <div className="space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h2 className="text-xl font-black text-slate-900">Suas Turmas Atribuídas</h2>
+                    <p className="text-xs sm:text-sm text-slate-500">
+                      Escolha a turma para preencher ou revisar a ficha de pré-conselho:
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl self-start">
+                    {teacherClasses.length} turmas atribuídas
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {teacherClasses.map((cls) => {
+                    const classReport = data.reports.find((r) => r.classId === cls.id && r.teacherId === currentUser.id);
+                    const isSubmitted = classReport?.status === 'submitted';
+                    const isDraft = classReport?.status === 'draft';
+                    const clsStudents = data.students.filter((s) => s.classId === cls.id);
+                    const starCount = clsStudents.filter((s) => s.isStar).length;
+
+                    return (
+                      <div
+                        key={cls.id}
+                        className={`bg-white rounded-3xl border p-5 sm:p-6 shadow-xs flex flex-col justify-between transition-all ${
+                          isSubmitted ? 'border-emerald-200' : isDraft ? 'border-amber-200' : 'border-slate-200'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <div className="text-xs text-slate-500 font-medium">Turno {cls.shift} · {cls.grade}</div>
+                              <h3 className="text-xl font-bold text-slate-900 mt-0.5">{cls.name}</h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-xs text-slate-500">{clsStudents.length} estudantes matriculados</span>
+                                {starCount > 0 && (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-md border border-amber-300">
+                                    <IconStar className="w-3 h-3 fill-amber-500 text-amber-600" filled />
+                                    <span>{starCount} Alunos Estrela ⭐</span>
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Status */}
+                            {isSubmitted ? (
+                              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">Entregue</span>
+                            ) : isDraft ? (
+                              <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">Rascunho</span>
+                            ) : (
+                              <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Pendente</span>
+                            )}
+                          </div>
+
+                          {/* RELAÇÃO NOMINAL DOS ALUNOS VISÍVEL DIRETO NO CARD */}
+                          <div className="mb-4 p-3 bg-slate-50/90 rounded-2xl border border-slate-100 space-y-1.5">
+                            <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
+                              <span className="flex items-center gap-1.5">
+                                <IconUsers className="w-3.5 h-3.5 text-slate-500" />
+                                <span>Alunos da Turma ({clsStudents.length}):</span>
+                              </span>
+                              {starCount > 0 && (
+                                <span className="text-amber-900 font-bold flex items-center gap-1">
+                                  <IconStar className="w-3 h-3 fill-amber-400 text-amber-500" filled />
+                                  <span>{starCount} Destaques ⭐</span>
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pt-1">
+                              {clsStudents.map((st) => (
+                                <span
+                                  key={st.id}
+                                  className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md border ${
+                                    st.isStar ? 'bg-amber-100 text-amber-900 border-amber-300 font-bold' : 'bg-white text-slate-700 border-slate-200'
+                                  }`}
+                                >
+                                  {st.isStar && <IconStar className="w-2.5 h-2.5 fill-amber-500 text-amber-600" filled />}
+                                  <span>#{st.rollNumber} {st.name.split(' ')[0]} {st.name.split(' ')[1] || ''}</span>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-2">
+                          {isSubmitted && classReport && (
+                            <button
+                              type="button"
+                              onClick={() => onViewReport(classReport)}
+                              className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors cursor-pointer text-xs font-bold"
+                              title="Ver ficha oficial enviada"
+                            >
+                              Ver Ficha
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleSelectClass(cls.id)}
+                            className="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                          >
+                            <span>{isSubmitted ? 'Revisar Parecer da Turma' : isDraft ? 'Continuar Preenchimento' : 'Preencher Parecer da Turma'}</span>
+                            <IconArrowRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ETAPA 2: PREENCHIMENTO DA FICHA */}
+            {currentStep === 'fill_form' && selectedClass && (
+              <div className="space-y-6">
+                {/* Barra de navegação e salvar */}
+                <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep('select_class')}
+                      className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors cursor-pointer"
+                      title="Voltar às turmas"
+                    >
+                      <IconArrowLeft className="w-5 h-5" />
+                    </button>
+                    <div>
+                      <div className="text-xs font-semibold text-blue-700">Ficha do Pré-Conselho de Classe</div>
+                      <h2 className="text-lg sm:text-xl font-black text-slate-900">{selectedClass.name}</h2>
+                      <p className="text-xs text-slate-500">Componente: <strong>{currentUser.subject}</strong> · Turno {selectedClass.shift}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {savedMessage && (
+                      <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 animate-in fade-in">
+                        {savedMessage}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleSave('draft')}
+                      className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                    >
+                      Salvar Rascunho
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSave('submitted')}
+                      className="py-2.5 px-5 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-colors cursor-pointer"
+                    >
+                      Entregar Ficha Oficial
+                    </button>
+                  </div>
+                </div>
+
+                {/* RELAÇÃO NOMINAL DA TURMA COM ALUNOS ESTRELA ⭐ */}
+                {(() => {
+                  const classStudents = data.students.filter((s) => s.classId === selectedClass.id).sort((a,b) => a.rollNumber - b.rollNumber);
+                  const stars = classStudents.filter((s) => s.isStar);
+                  return (
+                    <div className="bg-white rounded-3xl border border-blue-200/90 shadow-xs p-5 sm:p-6 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-bold shadow-xs">
+                            <IconUsers className="w-5 h-5 text-blue-300" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-base font-bold text-slate-900">
+                                Relação Nominal de Alunos: {selectedClass.name}
+                              </h3>
+                              <span className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">
+                                {classStudents.length} matriculados
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              Clique na estrela ⭐ para indicar os melhores alunos ou clique no nome para inseri-lo no parecer.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 font-bold text-xs shadow-2xs">
+                            <IconStar className="w-4 h-4 fill-amber-400 text-amber-500" filled />
+                            <span>{stars.length} Alunos Estrela ⭐</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setShowRosterInForm(!showRosterInForm)}
+                            className="text-xs font-bold text-blue-700 hover:text-blue-900 cursor-pointer ml-2"
+                          >
+                            {showRosterInForm ? 'Ocultar Lista' : 'Exibir Lista'}
+                          </button>
+                        </div>
+                      </div>
+
+                      {showRosterInForm && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 pt-1">
+                          {classStudents.map((st) => (
+                            <div
+                              key={st.id}
+                              className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-colors ${
+                                st.isStar ? 'bg-amber-50/70 border-amber-300 shadow-2xs' : 'bg-slate-50 border-slate-200 hover:bg-slate-100/70'
+                              }`}
+                            >
+                              <div
+                                onClick={() => handleInsertStudent(st.name)}
+                                className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
+                                title="Clique para inserir o nome deste estudante na resposta atual"
+                              >
+                                <span className="w-6 h-6 rounded-md bg-white border border-slate-200 text-slate-700 font-mono text-[11px] font-bold flex items-center justify-center shrink-0">
+                                  {String(st.rollNumber).padStart(2, '0')}
+                                </span>
+                                <span className="text-xs font-bold text-slate-900 truncate">{st.name}</span>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => onOpenStarModal(st)}
+                                className={`p-1.5 rounded-lg transition-colors cursor-pointer shrink-0 ${
+                                  st.isStar ? 'text-amber-500 hover:bg-amber-100' : 'text-slate-300 hover:text-amber-400 hover:bg-slate-200/60'
+                                }`}
+                                title={st.isStar ? `Aluno Estrela ⭐: ${st.starReason || 'Destaque'}` : 'Conceder Estrela ao Aluno'}
+                              >
+                                <IconStar className="w-4 h-4" filled={st.isStar} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* FORMULÁRIO DE SEÇÕES E PERGUNTAS */}
+                <div className="space-y-6">
+                  {data.sections.sort((a,b) => a.order - b.order).map((sec) => {
+                    const secQuestions = data.questions.filter((q) => q.sectionId === sec.id).sort((a,b) => a.order - b.order);
+                    if (secQuestions.length === 0) return null;
+
+                    const classStudents = data.students.filter((s) => s.classId === selectedClass.id).sort((a,b) => a.rollNumber - b.rollNumber);
+
+                    return (
+                      <div key={sec.id} className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+                        <div className="border-b border-slate-200 pb-3">
+                          <h3 className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-wide">
+                            {sec.title}
+                          </h3>
+                        </div>
+
+                        <div className="space-y-6">
+                          {secQuestions.map((q) => {
+                            const val = answers[q.id] || '';
+                            const isStarQuestion = q.id === 'q-5' || q.prompt.toLowerCase().includes('destac');
+                            const isListeningThis = isListening && activeListeningQId === q.id;
+
+                            return (
+                              <div key={q.id} className="space-y-2">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                  <label className="text-xs sm:text-sm font-bold text-slate-800 leading-snug">
+                                    {q.prompt} {q.required && <span className="text-red-500">*</span>}
+                                  </label>
+
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    {/* Falar por voz */}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleVoice(q.id)}
+                                      className={`py-1 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
+                                        isListeningThis ? 'bg-red-600 text-white animate-pulse' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                                      }`}
+                                      title="Ditar parecer por voz (microfone)"
+                                    >
+                                      <IconMic className="w-3.5 h-3.5" />
+                                      <span>{isListeningThis ? 'Gravando...' : 'Falar'}</span>
+                                    </button>
+
+                                    {/* Banco de Frases */}
+                                    <button
+                                      type="button"
+                                      onClick={() => setPhraseModalQ(q)}
+                                      className="py-1 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                                      title="Inserir sugestão pedagógica pronta"
+                                    >
+                                      <IconLightbulb className="w-3.5 h-3.5 text-amber-500" />
+                                      <span>Sugestões</span>
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Chips de Alunos da Turma para inserir na resposta */}
+                                <div className="p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1.5">
+                                  <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600">
+                                    <span className="flex items-center gap-1">
+                                      {isStarQuestion ? <IconStar className="w-3.5 h-3.5 fill-amber-400 text-amber-500" filled /> : <IconUsers className="w-3.5 h-3.5 text-slate-500" />}
+                                      <span>{isStarQuestion ? 'Estudantes da Turma (clique para inserir e conceder estrela ⭐):' : 'Inserir estudante na resposta:'}</span>
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                                    {classStudents.map((st) => (
+                                      <button
+                                        key={st.id}
+                                        type="button"
+                                        onClick={() => {
+                                          handleInsertStudent(st.name, q.id);
+                                          if (isStarQuestion && !st.isStar) {
+                                            onToggleStar(st.id, { isStar: true });
+                                          }
+                                        }}
+                                        className={`py-1 px-2.5 rounded-lg text-xs font-medium flex items-center gap-1 cursor-pointer transition-colors ${
+                                          st.isStar ? 'bg-amber-100 text-amber-950 border border-amber-300 font-bold' : 'bg-white text-slate-700 border border-slate-200 hover:bg-blue-50'
+                                        }`}
+                                      >
+                                        {st.isStar && <IconStar className="w-3 h-3 fill-amber-500 text-amber-600" filled />}
+                                        <span>#{st.rollNumber} {st.name}</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                <textarea
+                                  rows="3"
+                                  value={val}
+                                  onFocus={() => setLastActiveQId(q.id)}
+                                  onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
+                                  placeholder="Digite seu parecer pedagógico para este quesito..."
+                                  className="w-full text-xs sm:text-sm rounded-xl border border-slate-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Modal de Banco de Frases */}
+            {phraseModalQ && (
+              <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+                <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <h3 className="text-sm font-bold text-slate-900">Sugestões de Pareceres Pedagógicos</h3>
+                    <button type="button" onClick={() => setPhraseModalQ(null)} className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer">
+                      <IconX className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500">Clique em qualquer frase para adicioná-la à sua resposta:</p>
+                  <div className="space-y-2 max-h-72 overflow-y-auto">
+                    {PHRASE_SUGGESTIONS.map((item, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          const cur = answers[phraseModalQ.id] || '';
+                          setAnswers({ ...answers, [phraseModalQ.id]: cur ? `${cur} ${item.text}` : item.text });
+                          setPhraseModalQ(null);
+                        }}
+                        className="w-full text-left p-3 rounded-xl border border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 transition-colors text-xs text-slate-800 cursor-pointer"
+                      >
+                        <span className="inline-block text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full mb-1">
+                          {item.cat}
+                        </span>
+                        <p>{item.text}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      // ==========================================
+      // PAINEL ADMINISTRATIVO (ADMIN DASHBOARD)
+      // ==========================================
+      function AdminDashboard({ currentUser, data, onSaveReport, onToggleStar, onAddStudent, onDeleteStudent, onAddNotification, onViewReport, onOpenStarModal, onResetData, onDownloadHtml }) {
+        const [activeTab, setActiveTab] = useState('reports'); // 'reports' | 'consolidated' | 'students' | 'school'
+        const [filterClass, setFilterClass] = useState('all');
+        const [consolidatedClassId, setConsolidatedClassId] = useState(data.classes[0]?.id || '');
+        const [studentClassId, setStudentClassId] = useState(data.classes[0]?.id || '');
+        const [newStudentName, setNewStudentName] = useState('');
+
+        const selectedConsolidatedClass = data.classes.find((c) => c.id === consolidatedClassId);
+        const consolidatedReports = data.reports.filter((r) => r.classId === consolidatedClassId && r.status === 'submitted');
+
+        const filteredReports = data.reports.filter((r) => {
+          if (filterClass !== 'all' && r.classId !== filterClass) return false;
+          return true;
+        });
+
+        const handleCreateStudent = (e) => {
+          e.preventDefault();
+          if (!newStudentName.trim()) return;
+          const classStudents = data.students.filter((s) => s.classId === studentClassId);
+          const nextRoll = classStudents.length > 0 ? Math.max(...classStudents.map((s) => s.rollNumber)) + 1 : 1;
+          onAddStudent({ classId: studentClassId, name: newStudentName.trim(), rollNumber: nextRoll });
+          setNewStudentName('');
+        };
+
+        const handleExportCsv = () => {
+          let csv = 'Turma,Componente,Professor,Data,Status\n';
+          filteredReports.forEach((r) => {
+            csv += `"${r.className}","${r.subject}","${r.teacherName}","${r.date}","${r.status}"\n`;
+          });
+          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `relatorios_pre_conselho_${new Date().toISOString().split('T')[0]}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+        };
+
+        return (
+          <div className="space-y-6">
+            {/* Abas da Coordenação */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-2 shadow-xs flex flex-wrap gap-1.5 print:hidden">
+              <button
+                type="button"
+                onClick={() => setActiveTab('reports')}
+                className={`py-2 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
+                  activeTab === 'reports' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <span>Relatórios da Escola</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('consolidated')}
+                className={`py-2 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
+                  activeTab === 'consolidated' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <IconBookOpen className="w-4 h-4 text-blue-400" />
+                <span>Ata Consolidada por Turma</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('students')}
+                className={`py-2 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
+                  activeTab === 'students' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <IconStar className="w-4 h-4 fill-amber-400 text-amber-500" filled />
+                <span>Turmas & Alunos Estrela ⭐</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('school')}
+                className={`py-2 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
+                  activeTab === 'school' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <span>Escola & Backup</span>
+              </button>
+            </div>
+
+            {/* TAB 1: RELATÓRIOS DA ESCOLA */}
+            {activeTab === 'reports' && (
+              <div className="space-y-5">
+                {/* Filtro e Exportar */}
+                <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase text-slate-500 mb-1">Filtrar por Turma:</label>
+                      <select
+                        value={filterClass}
+                        onChange={(e) => setFilterClass(e.target.value)}
+                        className="text-xs sm:text-sm font-bold rounded-xl border border-slate-300 px-3 py-2 bg-white"
+                      >
+                        <option value="all">Todas as Turmas ({data.classes.length})</option>
+                        {data.classes.map((c) => (
+                          <option key={c.id} value={c.id}>{c.name} ({c.shift})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleExportCsv}
+                      className="py-2.5 px-4 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <IconDownload className="w-4 h-4" />
+                      <span>Exportar CSV</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* QUANDO UMA TURMA É SELECIONADA NO FILTRO: EXIBE A LISTA DE ALUNOS COM ESTRELAS ⭐ */}
+                {filterClass !== 'all' && (() => {
+                  const selCls = data.classes.find((c) => c.id === filterClass);
+                  if (!selCls) return null;
+                  const clsStudents = data.students.filter((s) => s.classId === selCls.id).sort((a,b) => a.rollNumber - b.rollNumber);
+                  const stars = clsStudents.filter((s) => s.isStar);
+
+                  return (
+                    <div className="bg-white rounded-3xl border border-blue-200 shadow-xs p-5 sm:p-6 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-bold">
+                            <IconUsers className="w-5 h-5 text-blue-300" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-base font-bold text-slate-900">Alunos Matriculados: {selCls.name}</h3>
+                              <span className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+                                {clsStudents.length} alunos
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500">Turno {selCls.shift} · {selCls.grade}</p>
+                          </div>
+                        </div>
+
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 font-bold text-xs">
+                          <IconStar className="w-4 h-4 fill-amber-400 text-amber-500" filled />
+                          <span>{stars.length} Alunos Estrela ⭐</span>
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                        {clsStudents.map((st) => (
+                          <div
+                            key={st.id}
+                            className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 ${
+                              st.isStar ? 'bg-amber-50/70 border-amber-300' : 'bg-slate-50 border-slate-200'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="w-6 h-6 rounded-md bg-white border border-slate-200 text-slate-700 font-mono text-[11px] font-bold flex items-center justify-center shrink-0">
+                                {String(st.rollNumber).padStart(2, '0')}
+                              </span>
+                              <span className="text-xs font-bold text-slate-900 truncate">{st.name}</span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => onOpenStarModal(st)}
+                              className="p-1 rounded-lg text-amber-500 hover:bg-amber-100 cursor-pointer"
+                              title={st.isStar ? `Aluno Estrela ⭐: ${st.starReason || 'Destaque'}` : 'Conceder estrela'}
+                            >
+                              <IconStar className="w-4 h-4" filled={st.isStar} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Tabela de Relatórios */}
+                <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs">
+                  <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+                    <h3 className="text-base font-bold text-slate-900">Fichas Cadastradas ({filteredReports.length})</h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[11px] font-bold">
+                          <th className="py-3 px-4">Turma</th>
+                          <th className="py-3 px-4">Componente</th>
+                          <th className="py-3 px-4">Professor(a)</th>
+                          <th className="py-3 px-4">Data</th>
+                          <th className="py-3 px-4">Status</th>
+                          <th className="py-3 px-4 text-right">Ação</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredReports.map((r) => (
+                          <tr key={r.id} className="hover:bg-slate-50">
+                            <td className="py-3 px-4 font-bold text-slate-900">{r.className}</td>
+                            <td className="py-3 px-4 text-slate-700">{r.subject}</td>
+                            <td className="py-3 px-4 text-slate-700">{r.teacherName}</td>
+                            <td className="py-3 px-4 text-slate-500">{r.date}</td>
+                            <td className="py-3 px-4">
+                              <span className={`px-2 py-0.5 rounded-md font-bold text-[11px] ${
+                                r.status === 'submitted' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                              }`}>
+                                {r.status === 'submitted' ? 'Entregue' : 'Rascunho'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <button
+                                type="button"
+                                onClick={() => onViewReport(r)}
+                                className="py-1 px-3 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-bold text-xs cursor-pointer"
+                              >
+                                Ver Ficha
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: ATA CONSOLIDADA POR TURMA */}
+            {activeTab === 'consolidated' && selectedConsolidatedClass && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-500 mb-1">Selecionar Turma da Ata:</label>
+                    <select
+                      value={consolidatedClassId}
+                      onChange={(e) => setConsolidatedClassId(e.target.value)}
+                      className="text-sm font-bold rounded-xl border border-slate-300 px-3 py-2 bg-white"
+                    >
+                      {data.classes.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name} ({c.shift})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="py-2.5 px-4 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <IconPrinter className="w-4 h-4" />
+                    <span>Imprimir Ata Oficial</span>
+                  </button>
+                </div>
+
+                {/* Banner da Turma e Alunos Estrela ⭐ */}
+                {(() => {
+                  const classStudents = data.students.filter((s) => s.classId === selectedConsolidatedClass.id).sort((a,b) => a.rollNumber - b.rollNumber);
+                  const starStudents = classStudents.filter((s) => s.isStar);
+
+                  return (
+                    <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                        <div>
+                          <div className="text-xs uppercase font-bold text-blue-700">Ata Consolidada</div>
+                          <h3 className="text-xl font-black text-slate-900">{selectedConsolidatedClass.name} — {selectedConsolidatedClass.shift}</h3>
+                          <p className="text-xs text-slate-500 mt-0.5">{classStudents.length} estudantes matriculados · {consolidatedReports.length} pareceres docentes recebidos</p>
+                        </div>
+
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 font-bold text-xs">
+                          <IconStar className="w-4 h-4 fill-amber-400 text-amber-500" filled />
+                          <span>{starStudents.length} Alunos Estrela ⭐</span>
+                        </span>
+                      </div>
+
+                      {/* Quadro de Honra dos Alunos Estrela */}
+                      {starStudents.length > 0 && (
+                        <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 space-y-2">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1">
+                            <IconStar className="w-4 h-4 fill-amber-400 text-amber-500" filled />
+                            <span>Quadro de Destaques Estrela da Turma:</span>
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                            {starStudents.map((st) => (
+                              <div key={st.id} className="p-2.5 rounded-xl bg-white/90 border border-amber-200 shadow-2xs">
+                                <div className="font-bold text-xs text-slate-900 flex items-center gap-1">
+                                  <span>#{st.rollNumber} {st.name}</span>
+                                  <IconStar className="w-3.5 h-3.5 fill-amber-400 text-amber-500 ml-auto" filled />
+                                </div>
+                                <p className="text-[11px] text-amber-900 mt-0.5 italic">{st.starReason || 'Destaque acadêmico'}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Grid de Pareceres dos Professores por Quesito */}
+                      <div className="space-y-6 pt-3">
+                        {data.sections.sort((a,b) => a.order - b.order).map((sec) => {
+                          const secQuestions = data.questions.filter((q) => q.sectionId === sec.id).sort((a,b) => a.order - b.order);
+                          return (
+                            <div key={sec.id} className="space-y-4">
+                              <h4 className="text-sm font-black text-slate-900 uppercase border-b border-slate-200 pb-1">
+                                {sec.title}
+                              </h4>
+                              {secQuestions.map((q) => (
+                                <div key={q.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                                  <div className="text-xs font-bold text-slate-800">📌 {q.prompt}</div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
+                                    {consolidatedReports.map((rep) => (
+                                      <div key={rep.id} className="p-2.5 rounded-xl bg-white border border-slate-200 text-xs">
+                                        <div className="font-bold text-blue-700 text-[11px] border-b border-slate-100 pb-1 mb-1">
+                                          {rep.subject} — {rep.teacherName}
+                                        </div>
+                                        <p className="text-slate-700">{rep.answers[q.id] || '(Sem anotações)'}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* TAB 3: GESTÃO DE TURMAS & ALUNOS ESTRELA ⭐ */}
+            {activeTab === 'students' && (
+              <div className="space-y-5">
+                <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase text-slate-500 mb-1">Turma para Gestão:</label>
+                    <select
+                      value={studentClassId}
+                      onChange={(e) => setStudentClassId(e.target.value)}
+                      className="text-sm font-bold rounded-xl border border-slate-300 px-3 py-2 bg-white"
+                    >
+                      {data.classes.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name} ({c.shift})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <form onSubmit={handleCreateStudent} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Nome do novo aluno..."
+                      value={newStudentName}
+                      onChange={(e) => setNewStudentName(e.target.value)}
+                      className="text-xs sm:text-sm px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    />
+                    <button
+                      type="submit"
+                      className="py-2 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl flex items-center gap-1 cursor-pointer"
+                    >
+                      <IconPlus className="w-4 h-4" />
+                      <span>Adicionar</span>
+                    </button>
+                  </form>
+                </div>
+
+                {/* Lista de Alunos com Estrelas */}
+                {(() => {
+                  const classStudents = data.students.filter((s) => s.classId === studentClassId).sort((a,b) => a.rollNumber - b.rollNumber);
+                  return (
+                    <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                        <h3 className="text-base font-bold text-slate-900">
+                          Estudantes Matriculados ({classStudents.length})
+                        </h3>
+                        <span className="text-xs text-slate-500">
+                          Clique na estrela ⭐ para editar o motivo ou categoria de mérito do aluno
+                        </span>
+                      </div>
+
+                      <div className="divide-y divide-slate-100">
+                        {classStudents.map((st) => (
+                          <div key={st.id} className="py-3 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <span className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 font-mono text-xs font-bold flex items-center justify-center shrink-0">
+                                {st.rollNumber}
+                              </span>
+                              <div>
+                                <div className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                                  <span>{st.name}</span>
+                                  {st.isStar && (
+                                    <span className="text-[11px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                                      Aluno Estrela ⭐
+                                    </span>
+                                  )}
+                                </div>
+                                {st.isStar && st.starReason && (
+                                  <p className="text-xs text-amber-800 italic mt-0.5">{st.starReason}</p>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => onOpenStarModal(st)}
+                                className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+                                  st.isStar ? 'bg-amber-100 border-amber-300 text-amber-600' : 'bg-slate-50 border-slate-200 text-slate-400 hover:text-amber-500'
+                                }`}
+                                title="Conceder ou editar estrela de mérito"
+                              >
+                                <IconStar className="w-4 h-4" filled={st.isStar} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (confirm(`Remover ${st.name} desta turma?`)) onDeleteStudent(st.id);
+                                }}
+                                className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 cursor-pointer"
+                                title="Remover aluno"
+                              >
+                                <IconTrash className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* TAB 4: ESCOLA & BACKUP */}
+            {activeTab === 'school' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+                  <h3 className="text-base font-bold text-slate-900">Salvar e Exportar Arquivo</h3>
+                  <p className="text-xs text-slate-500">
+                    Você pode baixar este arquivo HTML autônomo completo para seu computador e executá-lo em qualquer navegador sem necessidade de servidor:
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onDownloadHtml}
+                    className="w-full py-3 px-4 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                  >
+                    <IconDownload className="w-4 h-4" />
+                    <span>Baixar Arquivo index.html Completo</span>
+                  </button>
+                </div>
+
+                <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+                  <h3 className="text-base font-bold text-slate-900">Gerenciamento de Dados</h3>
+                  <p className="text-xs text-slate-500">
+                    Se desejar restaurar todos os dados iniciais de fábrica (turmas, alunos estrela e pareceres):
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onResetData}
+                    className="w-full py-3 px-4 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold text-xs sm:text-sm rounded-xl flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>Resetar Dados para o Padrão</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      // ==========================================
+      // MODAL DE ALUNO ESTRELA ⭐ (CATEGORIAS E MOTIVO)
+      // ==========================================
+      function StarStudentModal({ student, teacherName, onClose, onSaveStar }) {
+        const [isStar, setIsStar] = useState(student.isStar ?? true);
+        const [category, setCategory] = useState(student.starCategory || 'academic');
+        const [reason, setReason] = useState(student.starReason || 'Excelente raciocínio lógico e participação nas aulas.');
+
+        const categories = [
+          { id: 'academic', label: 'Desempenho Acadêmico', desc: 'Notas elevadas e raciocínio exemplar' },
+          { id: 'attitude', label: 'Atitude & Cooperação', desc: 'Liderança positiva e respeito com todos' },
+          { id: 'improvement', label: 'Superação & Evolução', desc: 'Grande salto no aprendizado e dedicação' },
+          { id: 'creativity', label: 'Criatividade & Protagonismo', desc: 'Iniciativa em projetos e participação' },
+        ];
+
+        const handleSave = (e) => {
+          e.preventDefault();
+          onSaveStar(student.id, {
+            isStar,
+            starCategory: isStar ? category : undefined,
+            starReason: isStar ? reason.trim() : undefined,
+            starAddedBy: teacherName,
+          });
+        };
+
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden animate-in zoom-in-95">
+              <div className="bg-slate-900 text-white p-6 flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-400">
+                    <IconStar className="w-6 h-6 fill-amber-400 text-amber-400" filled />
+                  </div>
+                  <div>
+                    <div className="text-xs text-amber-300 font-semibold">Reconhecimento Pedagógico</div>
+                    <h3 className="text-lg font-bold text-white">{student.name}</h3>
+                    <p className="text-xs text-slate-300">Número de Chamada: #{student.rollNumber}</p>
+                  </div>
+                </div>
+                <button type="button" onClick={onClose} className="text-slate-400 hover:text-white cursor-pointer">
+                  <IconX className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSave} className="p-6 space-y-4">
+                <div className="flex items-center justify-between p-3 bg-amber-50 rounded-2xl border border-amber-200">
+                  <span className="text-xs font-bold text-amber-950">Atribuir Reconhecimento Estrela ⭐</span>
+                  <input
+                    type="checkbox"
+                    checked={isStar}
+                    onChange={(e) => setIsStar(e.target.checked)}
+                    className="w-5 h-5 rounded text-amber-600 focus:ring-amber-500"
+                  />
+                </div>
+
+                {isStar && (
+                  <>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-2">Categoria de Mérito:</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {categories.map((c) => (
+                          <div
+                            key={c.id}
+                            onClick={() => setCategory(c.id)}
+                            className={`p-3 rounded-xl border text-left cursor-pointer transition-colors ${
+                              category === c.id ? 'bg-amber-100/70 border-amber-400 font-bold text-amber-950' : 'bg-slate-50 border-slate-200 text-slate-700'
+                            }`}
+                          >
+                            <div className="text-xs">{c.label}</div>
+                            <div className="text-[10px] text-slate-500 font-normal">{c.desc}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Motivo / Parecer Específico:</label>
+                      <textarea
+                        rows="3"
+                        required
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        className="w-full text-xs sm:text-sm rounded-xl border border-slate-300 p-3 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                  <button type="button" onClick={onClose} className="py-2.5 px-4 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer">
+                    Cancelar
+                  </button>
+                  <button type="submit" className="py-2.5 px-5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl shadow-xs cursor-pointer">
+                    Salvar Destaque ⭐
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+      }
+
+      // ==========================================
+      // MODAL DE VISUALIZAÇÃO DA FICHA DE CONSELHO
+      // ==========================================
+      function ReportModal({ report, questions, sections, schoolConfig, students, onClose }) {
+        const starStudents = students.filter((s) => s.isStar);
+
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6 sm:p-8 space-y-6">
+              <div className="flex items-start justify-between pb-4 border-b border-slate-200">
+                <div>
+                  <div className="text-xs font-bold text-blue-700">{schoolConfig.documentTitle}</div>
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900">{report.className} — {report.subject}</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">Professor(a): <strong>{report.teacherName}</strong> · Data: {report.date}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <IconPrinter className="w-3.5 h-3.5" />
+                    <span>Imprimir</span>
+                  </button>
+                  <button type="button" onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <IconX className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Destaques Estrela da Turma */}
+              {starStudents.length > 0 && (
+                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center gap-1">
+                    <IconStar className="w-4 h-4 fill-amber-400 text-amber-500" filled />
+                    <span>Alunos Estrela ⭐ Reconhecidos nesta Turma:</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {starStudents.map((st) => (
+                      <div key={st.id} className="p-2.5 rounded-xl bg-white border border-amber-200 text-xs">
+                        <strong className="text-slate-900">#{st.rollNumber} {st.name}</strong>
+                        <p className="text-[11px] text-amber-800 mt-0.5 italic">{st.starReason || 'Destaque acadêmico'}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Respostas por Seção */}
+              <div className="space-y-6">
+                {sections.map((sec) => {
+                  const secQuestions = questions.filter((q) => q.sectionId === sec.id);
+                  return (
+                    <div key={sec.id} className="space-y-3">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-1">
+                        {sec.title}
+                      </h3>
+                      {secQuestions.map((q) => (
+                        <div key={q.id} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                          <div className="text-xs font-bold text-slate-800">{q.prompt}</div>
+                          <p className="text-xs text-slate-700 whitespace-pre-wrap">
+                            {report.answers[q.id] || <span className="text-slate-400 italic">(Sem preenchimento)</span>}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Assinaturas */}
+              <div className="pt-6 border-t border-slate-200 grid grid-cols-2 gap-6 text-center text-xs text-slate-500">
+                <div className="border-t border-slate-300 pt-2 font-medium">
+                  {report.teacherName}
+                  <div className="text-[10px] text-slate-400">Professor(a) Responsável</div>
+                </div>
+                <div className="border-t border-slate-300 pt-2 font-medium">
+                  {schoolConfig.pedagogueName}
+                  <div className="text-[10px] text-slate-400">Coordenação Pedagógica</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // ==========================================
+      // MODAL DE NOTIFICAÇÕES
+      // ==========================================
+      function NotificationsModal({ notifications, currentUser, onClose, onMarkAsRead }) {
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl p-6 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <IconBell className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-base font-bold text-slate-900">Lembretes e Avisos</h3>
+                </div>
+                <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                  <IconX className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-2 max-h-72 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <p className="text-xs text-slate-400 text-center py-6">Nenhum aviso no momento.</p>
+                ) : (
+                  notifications.map((n) => (
+                    <div
+                      key={n.id}
+                      onClick={() => onMarkAsRead(n.id)}
+                      className={`p-3 rounded-2xl border transition-colors cursor-pointer ${
+                        n.isRead ? 'bg-slate-50 border-slate-200' : 'bg-blue-50/50 border-blue-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-900">
+                        <span>{n.title}</span>
+                        <span className="text-[10px] text-slate-400 font-normal">{n.date}</span>
+                      </div>
+                      <p className="text-xs text-slate-600 mt-1">{n.message}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // RENDERIZAÇÃO NO NAVEGADOR
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
   </body>
 </html>
-
