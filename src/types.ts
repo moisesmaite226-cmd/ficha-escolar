@@ -24,6 +24,11 @@ export interface Student {
   classId: string;
   name: string;
   rollNumber: number;
+  isStar?: boolean;
+  starReason?: string;
+  starCategory?: 'academic' | 'attitude' | 'improvement' | 'creativity';
+  starAddedBy?: string;
+  notes?: string;
 }
 
 export interface QuestionSection {
@@ -52,6 +57,7 @@ export interface Report {
   teacherName: string;
   subject: string; // Componente Curricular
   date: string; // YYYY-MM-DD
+  period?: string; // Ex: '1º Bimestre', '2º Bimestre'
   answers: Record<string, string>; // questionId -> answer
   status: 'submitted' | 'draft';
   createdAt: string;
@@ -73,7 +79,20 @@ export interface SchoolConfig {
   name: string;
   subtitle: string;
   documentTitle: string;
-  period: string;
+  period: string; // e.g. '1º Bimestre'
   pedagogueName: string;
   principalName: string;
+}
+
+export interface SystemBackup {
+  version: string;
+  exportDate: string;
+  schoolConfig: SchoolConfig;
+  users: User[];
+  classes: ClassGroup[];
+  students: Student[];
+  sections: QuestionSection[];
+  questions: QuestionItem[];
+  reports: Report[];
+  notifications: PushNotification[];
 }

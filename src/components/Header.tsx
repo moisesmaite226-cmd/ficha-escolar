@@ -38,43 +38,37 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-18">
-          {/* School Brand / Identity */}
-          <div className="flex items-center space-x-3">
-            <div className="w-11 h-11 rounded-xl bg-blue-700 text-white flex items-center justify-center shadow-md shadow-blue-700/20 shrink-0">
-              <GraduationCap className="w-6 h-6" />
+        <div className="flex items-center justify-between h-16">
+          {/* Zone 1: School Identity */}
+          <div className="flex items-center space-x-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-xs shrink-0">
+              <GraduationCap className="w-5 h-5 text-blue-400" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-                  Pré-Conselho Digital
-                </span>
-                <span className="text-xs font-medium text-slate-500 hidden sm:inline">
-                  {schoolConfig.period}
-                </span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                <span className="font-semibold text-slate-900 tracking-tight">Pré-Conselho Escolar</span>
+                <span aria-hidden="true">·</span>
+                <span className="hidden sm:inline">{schoolConfig.period}</span>
               </div>
-              <h1 className="text-sm sm:text-base font-bold text-slate-900 line-clamp-1">
+              <h1 className="text-sm sm:text-base font-bold text-slate-900 truncate">
                 {schoolConfig.name}
               </h1>
-              <p className="text-xs text-slate-500 hidden md:block">
-                {schoolConfig.subtitle}
-              </p>
             </div>
           </div>
 
-          {/* User Controls & Quick Switcher */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          {/* Zone 3: Controls, Notifications & User Switcher */}
+          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
             {/* Push Notifications Bell */}
             <button
               id="header-notification-btn"
               type="button"
               onClick={onOpenNotifications}
-              className="relative p-2.5 rounded-xl text-slate-600 hover:text-blue-700 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer"
+              className="relative p-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer"
               title="Notificações e Lembretes"
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 flex items-center justify-center min-w-5 h-5 px-1 text-xs font-bold text-white bg-red-600 rounded-full ring-2 ring-white animate-pulse">
+                <span className="absolute top-1.5 right-1.5 flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-bold text-white bg-blue-600 rounded-full tabular-nums">
                   {unreadCount}
                 </span>
               )}
@@ -86,9 +80,9 @@ export const Header: React.FC<HeaderProps> = ({
                 id="header-switch-user-btn"
                 type="button"
                 onClick={() => setShowSwitchMenu(!showSwitchMenu)}
-                className="flex items-center space-x-2.5 pl-2.5 pr-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer text-left"
+                className="flex items-center space-x-2.5 pl-2.5 pr-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors cursor-pointer text-left"
               >
-                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-800 font-bold flex items-center justify-center text-xs shrink-0 overflow-hidden">
+                <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs shrink-0 overflow-hidden border border-slate-200">
                   {currentUser.avatar ? (
                     <img
                       src={currentUser.avatar}
@@ -100,17 +94,17 @@ export const Header: React.FC<HeaderProps> = ({
                   )}
                 </div>
                 <div className="hidden sm:block">
-                  <div className="text-xs font-bold text-slate-900 leading-tight">
+                  <div className="text-xs font-semibold text-slate-900 leading-tight truncate max-w-36">
                     {currentUser.name}
                   </div>
                   <div className="flex items-center gap-1 text-[11px] text-slate-500">
                     {currentUser.role === 'admin' ? (
-                      <span className="text-emerald-700 font-semibold flex items-center gap-0.5">
-                        <Shield className="w-3 h-3 inline" /> Coordenação / Admin
+                      <span className="text-emerald-700 font-medium flex items-center gap-0.5">
+                        <Shield className="w-3 h-3 inline" /> Coordenação
                       </span>
                     ) : (
-                      <span className="text-blue-700 font-medium flex items-center gap-0.5">
-                        <BookOpen className="w-3 h-3 inline" /> Professor
+                      <span className="text-slate-600 font-medium flex items-center gap-0.5 truncate max-w-32">
+                        <BookOpen className="w-3 h-3 inline text-blue-600" /> {currentUser.subject || 'Professor'}
                       </span>
                     )}
                   </div>
@@ -148,11 +142,11 @@ export const Header: React.FC<HeaderProps> = ({
                             }}
                             className={`w-full text-left px-3.5 py-2.5 flex items-center space-x-3 transition-colors ${
                               isCurrent
-                                ? 'bg-blue-50 text-blue-900 font-semibold'
+                                ? 'bg-slate-50 text-slate-900 font-semibold'
                                 : 'hover:bg-slate-50 text-slate-700'
                             }`}
                           >
-                            <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+                            <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden border border-slate-200">
                               {u.avatar ? (
                                 <img
                                   src={u.avatar}

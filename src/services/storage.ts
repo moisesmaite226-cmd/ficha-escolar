@@ -7,6 +7,7 @@ import {
   Report,
   PushNotification,
   SchoolConfig,
+  SystemBackup,
 } from '../types';
 import {
   INITIAL_SCHOOL_CONFIG,
@@ -54,6 +55,31 @@ export function getUsers(): User[] {
   return getStored<User[]>(STORAGE_KEYS.USERS, INITIAL_USERS);
 }
 
+export function saveUsers(users: User[]): void {
+  setStored(STORAGE_KEYS.USERS, users);
+}
+
+export function addUser(user: Omit<User, 'id'>): User {
+  const current = getUsers();
+  const newUser: User = {
+    ...user,
+    id: `teacher-${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 4)}`,
+  };
+  saveUsers([...current, newUser]);
+  return newUser;
+}
+
+export function updateUser(id: string, updates: Partial<User>): void {
+  const current = getUsers();
+  const updated = current.map((u) => (u.id === id ? { ...u, ...updates } : u));
+  saveUsers(updated);
+}
+
+export function deleteUser(id: string): void {
+  const current = getUsers();
+  saveUsers(current.filter((u) => u.id !== id));
+}
+
 export function getCurrentUser(): User | null {
   return getStored<User | null>(STORAGE_KEYS.CURRENT_USER, INITIAL_USERS[0]); // default to Carlos Silva for easy start
 }
@@ -67,13 +93,86 @@ export function getClasses(): ClassGroup[] {
   return getStored<ClassGroup[]>(STORAGE_KEYS.CLASSES, INITIAL_CLASSES);
 }
 
+export function saveClasses(classes: ClassGroup[]): void {
+  setStored(STORAGE_KEYS.CLASSES, classes);
+}
+
+export function addClass(newCls: Omit<ClassGroup, 'id'>): ClassGroup {
+  const current = getClasses();
+  const id = `turma-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 4)}`;
+  const created: ClassGroup = {
+    ...newCls,
+    id,
+  };
+  saveClasses([...current, created]);
+  return created;
+}
+
+export function deleteClass(classId: string): void {
+  const current = getClasses();
+  saveClasses(current.filter((c) => c.id !== classId));
+}
+
 export function getStudents(): Student[] {
   return getStored<Student[]>(STORAGE_KEYS.STUDENTS, INITIAL_STUDENTS);
+}
+
+export function saveStudents(students: Student[]): void {
+  setStored(STORAGE_KEYS.STUDENTS, students);
 }
 
 export function getStudentsByClass(classId: string): Student[] {
   const students = getStudents();
   return students.filter((s) => s.classId === classId);
+}
+
+export function addStudent(newSt: Omit<Student, 'id'>): Student {
+  const current = getStudents();
+  const id = `st-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 4)}`;
+  const created: Student = {
+    ...newSt,
+    id,
+  };
+  saveStudents([...current, created]);
+  return created;
+}
+
+export function updateStudent(id: string, updates: Partial<Student>): void {
+  const current = getStudents();
+  const updated = current.map((s) => (s.id === id ? { ...s, ...updates } : s));
+  saveStudents(updated);
+}
+
+export function deleteStudent(id: string): void {
+  const current = getStudents();
+  saveStudents(current.filter((s) => s.id !== id));
+}
+
+export function toggleStudentStar(
+  id: string,
+  details?: {
+    isStar?: boolean;
+    starCategory?: 'academic' | 'attitude' | 'improvement' | 'creativity';
+    starReason?: string;
+    starAddedBy?: string;
+  }
+): Student | null {
+  const current = getStudents();
+  const student = current.find((s) => s.id === id);
+  if (!student) return null;
+
+  const newIsStar = details?.isStar !== undefined ? details.isStar : !student.isStar;
+  const updatedStudent: Student = {
+    ...student,
+    isStar: newIsStar,
+    starCategory: newIsStar ? details?.starCategory || student.starCategory || 'academic' : undefined,
+    starReason: newIsStar ? details?.starReason || student.starReason || 'Aluno destaque da turma no bimestre' : undefined,
+    starAddedBy: newIsStar ? details?.starAddedBy || student.starAddedBy || 'Conselho Docente' : undefined,
+  };
+
+  const updatedList = current.map((s) => (s.id === id ? updatedStudent : s));
+  saveStudents(updatedList);
+  return updatedStudent;
 }
 
 // Questionnaire Structure Services (Dynamic questionnaire edited by Admin)
@@ -195,6 +294,39 @@ export function getSchoolConfig(): SchoolConfig {
 
 export function saveSchoolConfig(config: SchoolConfig): void {
   setStored(STORAGE_KEYS.CONFIG, config);
+}
+
+// Full System Backup and Restore
+export function exportAllDataAsBackup(): SystemBackup {
+  return {
+    version: '1.0',
+    exportDate: new Date().toISOString(),
+    schoolConfig: getSchoolConfig(),
+    users: getUsers(),
+    classes: getClasses(),
+    students: getStudents(),
+    sections: getQuestionSections(),
+    questions: getQuestions(),
+    reports: getReports(),
+    notifications: getNotifications(),
+  };
+}
+
+export function importDataBackup(backup: Partial<SystemBackup>): boolean {
+  try {
+    if (backup.schoolConfig) setStored(STORAGE_KEYS.CONFIG, backup.schoolConfig);
+    if (backup.users && Array.isArray(backup.users)) setStored(STORAGE_KEYS.USERS, backup.users);
+    if (backup.classes && Array.isArray(backup.classes)) setStored(STORAGE_KEYS.CLASSES, backup.classes);
+    if (backup.students && Array.isArray(backup.students)) setStored(STORAGE_KEYS.STUDENTS, backup.students);
+    if (backup.sections && Array.isArray(backup.sections)) setStored(STORAGE_KEYS.SECTIONS, backup.sections);
+    if (backup.questions && Array.isArray(backup.questions)) setStored(STORAGE_KEYS.QUESTIONS, backup.questions);
+    if (backup.reports && Array.isArray(backup.reports)) setStored(STORAGE_KEYS.REPORTS, backup.reports);
+    if (backup.notifications && Array.isArray(backup.notifications)) setStored(STORAGE_KEYS.NOTIFICATIONS, backup.notifications);
+    return true;
+  } catch (err) {
+    console.error('Failed to import backup:', err);
+    return false;
+  }
 }
 
 // Reset data

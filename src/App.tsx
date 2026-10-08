@@ -8,13 +8,23 @@ import {
   Report,
   PushNotification,
   SchoolConfig,
+  SystemBackup,
 } from './types';
 import {
   getUsers,
+  addUser,
+  updateUser,
+  deleteUser,
   getCurrentUser,
   setCurrentUser,
   getClasses,
+  addClass,
+  deleteClass,
   getStudents,
+  addStudent,
+  updateStudent,
+  deleteStudent,
+  toggleStudentStar,
   getQuestionSections,
   getQuestions,
   saveQuestions,
@@ -29,10 +39,13 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
   getSchoolConfig,
+  saveSchoolConfig,
   resetAllData,
+  exportAllDataAsBackup,
+  importDataBackup,
 } from './services/storage';
 import { INITIAL_QUESTIONS } from './data/initialData';
-import { exportToExcel, exportSingleReportToPDF } from './utils/exportUtils';
+import { exportToExcel, exportSingleReportToPDF, exportConsolidatedClassToPDF } from './utils/exportUtils';
 import { Header } from './components/Header';
 import { LoginView } from './components/LoginView';
 import { TeacherDashboard } from './components/TeacherDashboard';
@@ -165,6 +178,78 @@ export default function App() {
     exportSingleReportToPDF(report, sections, questions, schoolConfig);
   };
 
+  const handleExportConsolidatedPDF = (className: string, classReports: Report[], classStudents?: Student[]) => {
+    exportConsolidatedClassToPDF(className, classReports, sections, questions, schoolConfig, classStudents);
+  };
+
+  const handleToggleStudentStar = (
+    studentId: string,
+    details?: {
+      isStar?: boolean;
+      starCategory?: 'academic' | 'attitude' | 'improvement' | 'creativity';
+      starReason?: string;
+      starAddedBy?: string;
+    }
+  ) => {
+    toggleStudentStar(studentId, details);
+    setStudents(getStudents());
+  };
+
+  const handleAddStudent = (st: Omit<Student, 'id'>) => {
+    addStudent(st);
+    setStudents(getStudents());
+  };
+
+  const handleUpdateStudent = (id: string, updates: Partial<Student>) => {
+    updateStudent(id, updates);
+    setStudents(getStudents());
+  };
+
+  const handleDeleteStudent = (id: string) => {
+    deleteStudent(id);
+    setStudents(getStudents());
+  };
+
+  const handleSaveSchoolConfig = (newConfig: SchoolConfig) => {
+    saveSchoolConfig(newConfig);
+    setSchoolConfig(newConfig);
+  };
+
+  const handleAddClass = (cls: Omit<ClassGroup, 'id'>) => {
+    addClass(cls);
+    setClasses(getClasses());
+  };
+
+  const handleDeleteClass = (classId: string) => {
+    deleteClass(classId);
+    setClasses(getClasses());
+  };
+
+  const handleAddUser = (user: Omit<User, 'id'>) => {
+    addUser(user);
+    setUsers(getUsers());
+  };
+
+  const handleUpdateUser = (id: string, updates: Partial<User>) => {
+    updateUser(id, updates);
+    setUsers(getUsers());
+  };
+
+  const handleDeleteUser = (id: string) => {
+    deleteUser(id);
+    setUsers(getUsers());
+  };
+
+  const handleRestoreBackup = (backup: Partial<SystemBackup>) => {
+    const success = importDataBackup(backup);
+    if (success) {
+      loadAllData();
+      alert('Backup restaurado com sucesso! Todos os dados do sistema foram atualizados.');
+    } else {
+      alert('Erro ao restaurar o arquivo de backup. Formato inválido.');
+    }
+  };
+
   const handleResetAllData = () => {
     resetAllData();
     loadAllData();
@@ -216,7 +301,18 @@ export default function App() {
             onViewReportModal={(rep) => setActiveReportModal(rep)}
             onExportExcel={handleExportExcel}
             onExportPDF={handleExportPDF}
+            onExportConsolidatedPDF={handleExportConsolidatedPDF}
             onSendPushReminder={handleSendNotification}
+            onSaveSchoolConfig={handleSaveSchoolConfig}
+            onAddClass={handleAddClass}
+            onDeleteClass={handleDeleteClass}
+            onAddUser={handleAddUser}
+            onUpdateUser={handleUpdateUser}
+            onDeleteUser={handleDeleteUser}
+            onRestoreBackup={handleRestoreBackup}
+            onToggleStudentStar={handleToggleStudentStar}
+            onAddStudent={handleAddStudent}
+            onDeleteStudent={handleDeleteStudent}
           />
         ) : (
           <TeacherDashboard
@@ -230,6 +326,7 @@ export default function App() {
             onSaveReport={handleSaveReport}
             onViewReportModal={(rep) => setActiveReportModal(rep)}
             onExportPDF={handleExportPDF}
+            onToggleStudentStar={handleToggleStudentStar}
           />
         )}
       </main>
