@@ -81,11 +81,30 @@ export function deleteUser(id: string): void {
 }
 
 export function getCurrentUser(): User | null {
-  return getStored<User | null>(STORAGE_KEYS.CURRENT_USER, INITIAL_USERS[0]); // default to Carlos Silva for easy start
+  // Always require manual password login on startup/refresh
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+      sessionStorage.removeItem('portal_escolar_session_user');
+      sessionStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+    }
+  } catch {
+    // ignore
+  }
+  return null;
 }
 
 export function setCurrentUser(user: User | null): void {
-  setStored<User | null>(STORAGE_KEYS.CURRENT_USER, user);
+  // Clear persistent tokens so refreshing always requires password
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+      sessionStorage.removeItem('portal_escolar_session_user');
+      sessionStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+    }
+  } catch {
+    // ignore
+  }
 }
 
 // Class & Student Services

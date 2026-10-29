@@ -9,6 +9,7 @@ export interface User {
   subject?: string; // Componente curricular (ex: Matemática, Língua Portuguesa)
   assignedClassIds: string[];
   avatar?: string;
+  password?: string;
 }
 
 export interface ClassGroup {

@@ -1,5 +1,43 @@
 @import "tailwindcss";
 
+@theme {
+  --color-navy-950: #030814;
+  --color-navy-900: #071026;
+  --color-navy-850: #0b1736;
+  --color-navy-800: #10214c;
+  --color-navy-750: #162c64;
+  --color-navy-700: #1d397e;
+  --color-navy-600: #2a4e9e;
+  --color-navy-500: #3d6ac7;
+
+  --color-obsidian-950: #000000;
+  --color-obsidian-900: #020408;
+  --color-obsidian-850: #050912;
+  --color-obsidian-800: #0a0f1d;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: #071026;
+  color: #f8fafc;
+}
+
+/* Custom scrollbar for navy theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #030814;
+}
+::-webkit-scrollbar-thumb {
+  background: #162c64;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2a4e9e;
+}
+
 @media print {
   body {
     background-color: white !important;
@@ -17,6 +55,16 @@
   .print\:max-h-none {
     max-height: none !important;
     overflow: visible !important;
+  }
+  .print-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    color: #000000 !important;
+  }
+  .print-table th, .print-table td {
+    border: 1px solid #333333 !important;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
   }
   @page {
     margin: 1.5cm;

@@ -267,7 +267,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-[#071026] text-slate-100 flex flex-col selection:bg-white selection:text-[#071026]">
       {/* Universal Header */}
       <Header
         currentUser={currentUser}
@@ -281,7 +281,7 @@ export default function App() {
       />
 
       {/* Main Body: Teacher vs Admin View */}
-      <main className="flex-1">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {currentUser.role === 'admin' ? (
           <AdminDashboard
             currentUser={currentUser}
@@ -354,10 +354,9 @@ export default function App() {
       />
 
       {/* Minimal Footer */}
-      <footer className="py-4 border-t border-slate-200 bg-white text-center text-xs text-slate-500 print:hidden">
+      <footer className="py-4 border-t border-[#162c64] bg-black text-center text-xs text-slate-500 print:hidden">
         <p>
-          {schoolConfig.name} • {schoolConfig.subtitle} — Sistema de Gestão do
-          Pré-Conselho de Classe
+          SIGEC · {schoolConfig.name} • Sistema Integrado de Pré-Conselho de Classe
         </p>
       </footer>
     </div>

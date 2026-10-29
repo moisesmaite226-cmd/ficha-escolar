@@ -19,6 +19,7 @@ export const INITIAL_USERS: User[] = [
     subject: 'Matemática e Raciocínio Lógico',
     assignedClassIds: ['turma-6a', 'turma-8a'],
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+    password: '123456',
   },
   {
     id: 'teacher-2',
@@ -29,6 +30,7 @@ export const INITIAL_USERS: User[] = [
     subject: 'Língua Portuguesa e Redação',
     assignedClassIds: ['turma-7b', 'turma-9a'],
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
+    password: '123456',
   },
   {
     id: 'teacher-3',
@@ -39,6 +41,7 @@ export const INITIAL_USERS: User[] = [
     subject: 'Ciências da Natureza',
     assignedClassIds: ['turma-6a', 'turma-7b'],
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80',
+    password: '123456',
   },
   {
     id: 'teacher-4',
@@ -49,6 +52,7 @@ export const INITIAL_USERS: User[] = [
     subject: 'História e Geografia',
     assignedClassIds: ['turma-8a', 'turma-9a'],
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
+    password: '123456',
   },
   {
     id: 'admin-1',
@@ -58,6 +62,7 @@ export const INITIAL_USERS: User[] = [
     role: 'admin',
     assignedClassIds: ['turma-6a', 'turma-7b', 'turma-8a', 'turma-9a'],
     avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=120&auto=format&fit=crop&q=80',
+    password: '123456',
   },
 ];
 

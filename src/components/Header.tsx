@@ -9,6 +9,7 @@ import {
   BookOpen,
   ChevronDown,
   RefreshCw,
+  Download,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -35,76 +36,76 @@ export const Header: React.FC<HeaderProps> = ({
   const [showSwitchMenu, setShowSwitchMenu] = useState(false);
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
+  const handleDownloadStandaloneHtml = () => {
+    window.open('/index.html', '_blank');
+  };
+
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <header className="bg-black border-b border-[#162c64] sticky top-0 z-40 shadow-lg print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Zone 1: School Identity */}
+          {/* Identidade da Escola */}
           <div className="flex items-center space-x-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-xs shrink-0">
-              <GraduationCap className="w-5 h-5 text-blue-400" />
+            <div className="w-10 h-10 rounded-xl bg-[#0b1736] border border-[#1d397e] text-white flex items-center justify-center shrink-0 shadow-inner">
+              <GraduationCap className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                <span className="font-semibold text-slate-900 tracking-tight">Pré-Conselho Escolar</span>
-                <span aria-hidden="true">·</span>
-                <span className="hidden sm:inline">{schoolConfig.period}</span>
+              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                <span className="text-white">Conselho de Classe</span>
+                <span>·</span>
+                <span className="text-blue-300">{schoolConfig.period}</span>
               </div>
-              <h1 className="text-sm sm:text-base font-bold text-slate-900 truncate">
+              <h1 className="text-xs sm:text-sm font-black text-white truncate tracking-tight">
                 {schoolConfig.name}
               </h1>
             </div>
           </div>
 
-          {/* Zone 3: Controls, Notifications & User Switcher */}
+          {/* Controles e Usuário */}
           <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
-            {/* Push Notifications Bell */}
+            {/* Notificações */}
             <button
               id="header-notification-btn"
               type="button"
               onClick={onOpenNotifications}
-              className="relative p-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer"
+              className="relative p-2 rounded-lg bg-[#0b1736] hover:bg-[#10214c] border border-[#162c64] text-slate-300 hover:text-white transition-colors cursor-pointer"
               title="Notificações e Lembretes"
             >
-              <Bell className="w-5 h-5" />
+              <Bell className="w-4 h-4" />
               {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-bold text-white bg-blue-600 rounded-full tabular-nums">
-                  {unreadCount}
-                </span>
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-black" />
               )}
             </button>
 
-            {/* Quick Switch User (Demonstration Utility) */}
+            {/* Perfil Atual & Troca Rápida */}
             <div className="relative">
               <button
                 id="header-switch-user-btn"
                 type="button"
                 onClick={() => setShowSwitchMenu(!showSwitchMenu)}
-                className="flex items-center space-x-2.5 pl-2.5 pr-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors cursor-pointer text-left"
+                className="flex items-center space-x-2.5 pl-2.5 pr-3 py-1.5 rounded-xl border border-[#162c64] bg-[#0b1736] hover:bg-[#10214c] transition-colors cursor-pointer text-left"
               >
-                <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs shrink-0 overflow-hidden border border-slate-200">
-                  {currentUser.avatar ? (
-                    <img
-                      src={currentUser.avatar}
-                      alt={currentUser.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    currentUser.name.charAt(0)
-                  )}
+                <div
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs shrink-0 shadow-xs ${
+                    currentUser.role === 'admin'
+                      ? 'bg-white text-[#071026]'
+                      : 'bg-black text-white border border-[#162c64]'
+                  }`}
+                >
+                  {currentUser.name.charAt(0)}
                 </div>
                 <div className="hidden sm:block">
-                  <div className="text-xs font-semibold text-slate-900 leading-tight truncate max-w-36">
+                  <div className="text-xs font-black text-white leading-tight truncate max-w-36">
                     {currentUser.name}
                   </div>
-                  <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                  <div className="flex items-center gap-1 text-[11px] text-slate-400">
                     {currentUser.role === 'admin' ? (
-                      <span className="text-emerald-700 font-medium flex items-center gap-0.5">
-                        <Shield className="w-3 h-3 inline" /> Coordenação
+                      <span className="text-amber-300 font-bold flex items-center gap-0.5">
+                        <Shield className="w-3 h-3 inline" /> Diretoria
                       </span>
                     ) : (
-                      <span className="text-slate-600 font-medium flex items-center gap-0.5 truncate max-w-32">
-                        <BookOpen className="w-3 h-3 inline text-blue-600" /> {currentUser.subject || 'Professor'}
+                      <span className="text-blue-300 font-medium flex items-center gap-0.5 truncate max-w-32">
+                        <BookOpen className="w-3 h-3 inline" /> {currentUser.subject || 'Professor'}
                       </span>
                     )}
                   </div>
@@ -112,20 +113,20 @@ export const Header: React.FC<HeaderProps> = ({
                 <ChevronDown className="w-4 h-4 text-slate-400" />
               </button>
 
-              {/* Dropdown Menu */}
+              {/* Menu Dropdown */}
               {showSwitchMenu && (
                 <>
                   <div
                     className="fixed inset-0 z-40"
                     onClick={() => setShowSwitchMenu(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
-                    <div className="px-3.5 py-2 border-b border-slate-100">
-                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        Trocar Perfil de Acesso
+                  <div className="absolute right-0 mt-2 w-72 bg-black rounded-2xl shadow-2xl border border-[#162c64] py-2 z-50">
+                    <div className="px-3.5 py-2 border-b border-[#162c64]">
+                      <p className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
+                        Trocar Perfil Docente
                       </p>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Selecione um professor ou coordenação para testar:
+                        Alterne entre professor e direção para testar:
                       </p>
                     </div>
 
@@ -142,56 +143,54 @@ export const Header: React.FC<HeaderProps> = ({
                             }}
                             className={`w-full text-left px-3.5 py-2.5 flex items-center space-x-3 transition-colors ${
                               isCurrent
-                                ? 'bg-slate-50 text-slate-900 font-semibold'
-                                : 'hover:bg-slate-50 text-slate-700'
+                                ? 'bg-[#0b1736] text-white font-bold'
+                                : 'hover:bg-[#071026] text-slate-300'
                             }`}
                           >
-                            <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden border border-slate-200">
-                              {u.avatar ? (
-                                <img
-                                  src={u.avatar}
-                                  alt={u.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                u.name.charAt(0)
-                              )}
+                            <div
+                              className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${
+                                u.role === 'admin'
+                                  ? 'bg-white text-[#071026]'
+                                  : 'bg-[#162c64] text-white'
+                              }`}
+                            >
+                              {u.name.charAt(0)}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-semibold truncate leading-tight">
+                              <p className="text-xs font-extrabold truncate leading-tight text-white">
                                 {u.name}
                               </p>
-                              <p className="text-[11px] text-slate-500 truncate">
+                              <p className="text-[11px] text-slate-400 truncate">
                                 {u.role === 'admin'
-                                  ? 'Painel Administrativo'
+                                  ? 'Diretoria / Coordenação'
                                   : u.subject || 'Professor'}
                               </p>
                             </div>
                             {isCurrent && (
-                              <UserCheck className="w-4 h-4 text-blue-600 shrink-0" />
+                              <UserCheck className="w-4 h-4 text-white shrink-0" />
                             )}
                           </button>
                         );
                       })}
                     </div>
 
-                    <div className="border-t border-slate-100 mt-1 pt-1 px-2">
+                    <div className="border-t border-[#162c64] mt-1 pt-1 px-2">
                       <button
                         type="button"
                         onClick={() => {
                           setShowSwitchMenu(false);
                           if (
                             confirm(
-                              'Deseja redefinir todos os relatórios e perguntas para os dados de demonstração originais?'
+                              'Deseja redefinir os dados para o padrão original de fábrica?'
                             )
                           ) {
                             onResetData();
                           }
                         }}
-                        className="w-full text-left px-2.5 py-2 text-xs text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg flex items-center gap-2 transition-colors cursor-pointer"
+                        className="w-full text-left px-2.5 py-2 text-xs text-slate-400 hover:text-white hover:bg-[#0b1736] rounded-lg flex items-center gap-2 transition-colors cursor-pointer"
                       >
                         <RefreshCw className="w-3.5 h-3.5" />
-                        Restaurar Dados de Demonstração
+                        Restaurar Dados Originais
                       </button>
                     </div>
                   </div>
@@ -199,15 +198,15 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
-            {/* Logout Button */}
+            {/* Botão de Sair */}
             <button
               id="header-logout-btn"
               type="button"
               onClick={onLogout}
-              className="p-2.5 rounded-xl text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer"
+              className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-[#0b1736] transition-colors cursor-pointer"
               title="Sair do Sistema"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>
